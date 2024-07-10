@@ -1,20 +1,22 @@
-import os, cv2
-def findalltype(dir):
-    all_files = os.listdir(dir)
-    all_files.sort()
-    all_type = []
-    files_group_by = []
+#!/Users/zhengpanpan/miniconda3/envs/cv/bin/python
 
-    for file in all_files:
-        exclude_extension = file.split(".")[0]
-        if exclude_extension.split("_")[1] not in all_type:
-            all_type.append(exclude_extension.split("_")[1])
-            files_group_by.append([])
-            files_group_by[-1].append(os.path.join(dir, file))
-        else:
-            files_group_by[-1].append(os.path.join(dir, file))
+import os
+import cv2
 
-    return all_type, files_group_by
+# def findallvideos(path2data):
+#     subject_file_dict = {}
+#     for root, dirs, files in os.walk(path2data):
+#         if len(files) > 0:
+#             fil_fn = [fn for fn in files if fn[0] != "."]
+#             subject_num = list(set([fn.split(".")[0].split("_")[1] for fn in fil_fn]))
+#             for sn in subject_num:
+#                 for fn in fil_fn:
+#                     if sn in fn:
+#                         if sn not in subject_file_dict:
+#                             subject_file_dict[sn] = []
+#                         subject_file_dict[sn].append(os.path.join(root, fn))
+#     return subject_file_dict
+
 
 def connect_videos(path2store,*args):
     p2s = path2store
@@ -45,6 +47,40 @@ def connect_videos(path2store,*args):
     print(args[1])
 
 if __name__ == "__main__":
-    a = findalltype("./Black_and_White")
-    print(a)
-    # connect_videos("./p2con",a[0][0], a[1][0])
+    # a = findalltype("./Black_and_White")
+    p2data = os.path.join("/Volumes/MyPassport","Data", "2024.3.25")
+
+    subject_file_dict = {}
+    for root, dirs, files in os.walk(p2data):
+        if len(files) > 0:
+            fil_fn = [fn for fn in files if fn[0] != "."]
+            subject_num = list(set([fn.split(".")[0].split("_")[1] for fn in fil_fn]))
+            for sn in subject_num:
+                for fn in fil_fn:
+                    if sn in fn:
+                        if sn not in subject_file_dict:
+                            subject_file_dict[sn] = []
+                        subject_file_dict[sn].append(os.path.join(root, fn))
+                        subject_file_dict[sn].sort()
+
+    # print(subject_file_dict)
+    for k in subject_file_dict.keys():
+        s_name = k + ".mp4"
+        cap = cv2.VideoCapture(subject_file_dict[k][0])
+        frame_width = int(cap.get(3))
+        frame_height = int(cap.get(4))
+        size = (frame_width, frame_height)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fps = round(cap.get(cv2.CAP_PROP_FPS))
+        out = cv2.VideoWriter(os.path.join("./", s_name), fourcc, fps , size)
+
+        for v in subject_file_dict[k]:
+            curr_v = cv2.VideoCapture(v)
+            while curr_v.isOpened():
+                # Get return value and curr frame of curr video
+                r, frame = curr_v.read()
+                if not r:
+                    break
+                    # Write the frame
+                out.write(frame)
+        out.release()
