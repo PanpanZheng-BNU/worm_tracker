@@ -1,6 +1,10 @@
 all_data/
 all_results/
 p2con/
+pics/
+.ipynb_checkpoints/
+.idea/
+.DS_Store
 *.avi
 *.mp4
 

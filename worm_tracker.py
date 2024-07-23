@@ -19,6 +19,7 @@ def tracing(*args):
     df = pd.DataFrame(columns=['x', 'y'])
     object_detector = cv2.createBackgroundSubtractorKNN()
 
+
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
     print(cap.get(cv2.CAP_PROP_FPS))
@@ -77,19 +78,4 @@ def tracing(*args):
 
 
 if __name__ == '__main__':
-    p2s = './all_results'
-    if not os.path.isdir(p2s):
-        os.makedirs(p2s)
-    # two_files = [os.path.join(path2v, all_files[0]),
-    #              # os.path.join(path2v, all_files[1]),
-    #              os.path.join(path2v, all_files[2])]
-    # with mp.Pool(processes=2) as pool:
-    #     pool.starmap(tracing, product(zip(two_files, [p2s] * len(two_files))))
 
-    tracing(['p2con/N2_Naive1.avi',p2s])
-
-    # for i in zip(two_files, [p2s] * len(two_files)):
-    #     print(*i)
-
-    # tracing(path2f)
-    # capture_process.start()
