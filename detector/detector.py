@@ -1,0 +1,138 @@
+import cv2
+import numpy as np
+import os
+import pandas as pd
+import sys
+import progressbar
+import multiprocessing
+
+sys.path.append('../')
+from conncat_videos  import find_all_videos
+
+def findROICenter(v):
+    """
+    using HoughCircles to find the center of the ROI
+    :param v: the path to the video
+    :return (cx, cy): the center of the ROI circle.
+    """
+    cap = cv2.VideoCapture(v)
+    ret, frame = cap.read()
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    detected_circles = cv2.HoughCircles(gray,
+                                        cv2.HOUGH_GRADIENT, 1, 20, param1=30,
+                                        param2=200, minRadius=900, maxRadius=980)
+    if detected_circles is not None:
+        a_avg, b_avg = np.uint64(0), np.uint64(0)
+        detected_circles = np.uint16(np.around(detected_circles))
+        for pt in detected_circles[0, :]:
+            a, b, r = pt[0], pt[1], pt[2]
+            a_avg += a
+            b_avg += b
+
+
+        a_avg = round(a_avg / detected_circles.shape[1])
+        b_avg = round(b_avg / detected_circles.shape[1])
+    return (a_avg, b_avg)
+
+def detect(v_dict, roiRadius):
+    """
+    detect(v, roiRadius): detect the object in the video
+    :param v: the path 2 video
+    :param roiRadius: the radius of ROI
+    :return: None
+    """
+    os.path.isdir("./results") or os.makedirs("./results")
+
+    vs = list(v_dict.values())[0]
+    print(vs[0])
+    sub_name = list(v_dict.keys())
+    roi_x, roi_y = findROICenter(vs[0])
+    object_detector = cv2.createBackgroundSubtractorKNN(history=1000, dist2Threshold=170)
+    tmp_cap = cv2.VideoCapture(vs[0])
+    ret, frame = tmp_cap.read()
+    fps = round(tmp_cap.get(cv2.CAP_PROP_FPS))
+    p2r = os.path.join("results", sub_name[0])
+    os.path.isdir(p2r) or os.makedirs(p2r)
+    p2rcsv = os.path.join(p2r, "csv")
+    os.path.isdir(p2rcsv) or os.makedirs(p2rcsv)
+
+    new_frame = cv2.VideoWriter(os.path.join(p2r, sub_name[0] +".avi"),
+                                cv2.VideoWriter_fourcc(*'XVID'), fps, (frame.shape[1], frame.shape[0]))
+    n_frame = 0
+    frame_length = 0
+    for v in vs:
+        tmp_cap = cv2.VideoCapture(v)
+        frame_length += int(tmp_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    bar = progressbar.ProgressBar(max_value=frame_length)
+    for v in vs:
+        curr_v = cv2.VideoCapture(v)
+        while curr_v.isOpened():
+            df = pd.DataFrame(columns=["frame", "x", "y", "w", "h", "cX", "cY", "ellipse_w", "ellipse_h"])
+            ret, frame = curr_v.read()
+            if not ret:
+                break
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            new_gray = np.zeros_like(gray)
+            new_gray = cv2.circle(new_gray, (roi_x, roi_y), roiRadius, (255, 255, 255), -1)
+            new_gray[new_gray != 0] = gray[new_gray != 0]
+            new_gray = object_detector.apply(new_gray)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            new_gray = cv2.morphologyEx(new_gray, cv2.MORPH_OPEN, kernel)
+            new_gray = cv2.morphologyEx(new_gray, cv2.MORPH_CLOSE, kernel)
+
+            contours, _ = cv2.findContours(new_gray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            n_frame += 1
+
+            for contour in contours:
+                if 20 < cv2.contourArea(contour) < 250:
+                    # print(cv2.arcLength(contour, True))
+                    approx = cv2.approxPolyDP(contour, 0.01 * cv2.arcLength(contour, True), True)
+                    x, y, w, h = cv2.boundingRect(approx)
+
+                    ellipse = cv2.fitEllipse(contour)
+                    ellipse_w, ellipse_h = ellipse[1]
+                    cv2.ellipse(frame, ellipse, (0, 255, 0), 2)
+
+                    # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
+                    M = cv2.moments(contour)
+                    cX = (M["m10"] / M["m00"])
+                    cY = (M["m01"] / M["m00"])
+                    cv2.circle(frame, (int(cX), int(cY)), 5, (0, 0, 255), -1)
+                    df.loc[len(df)] = [n_frame, x, y, w, h, cX, cY, ellipse_w, ellipse_h]
+
+
+            cv2.circle(frame, (roi_x, roi_y), roiRadius, (255, 0, 0), 3)
+            df.to_csv(os.path.join(p2rcsv, "{}_frame{}.csv".format(sub_name[0],n_frame)), index=False)
+            new_frame.write(frame)
+            bar.update(n_frame)
+
+            cv2.imshow("detec", new_gray)
+            cv2.imshow("frame", frame)
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                break
+
+    cv2.destroyAllWindows()
+    new_frame.release()
+
+if __name__ == "__main__":
+    # v = "../concat_video/N22.avi"
+    os.path.isdir("csv4") or os.makedirs("csv4")
+    v = "/Volumes/MyPassport/new_data/15cm/2023.7.14/"
+    # print(find_all_videos(v)['W1165_naiv1'])
+    new_dict = []
+    for sub in find_all_videos(v).keys():
+        new_dict.append({sub: find_all_videos(v)[sub]})
+    print(len(new_dict))
+    print([(i,j) for i,j in zip(new_dict,[1200 for _ in range(len(new_dict))])])
+    p = multiprocessing.Pool()
+    p.starmap(detect, [(i,j) for i,j in zip(new_dict,1200 * np.ones(len(new_dict), dtype=int))])
+
+    # print(findROICenter(find_all_videos(v)['W1165_naiv1'][1]))
+    # cap = cv2.VideoCapture(find_all_videos(v)['W1165_naiv3'][0])
+    # print(find_all_videos(v))
+    # print(find_all_videos(v).keys())
+    # detect(v, 1200)
+
