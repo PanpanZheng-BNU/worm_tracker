@@ -34,7 +34,7 @@ def findROICenter(v):
         b_avg = round(b_avg / detected_circles.shape[1])
     return (a_avg, b_avg)
 
-def detect(v_dict, roiRadius, vis=False):
+def detect(v_dict, roiRadius, vis, storepics):
     """
     detect(v, roiRadius): detect the object in the video
     :param v: the path 2 video
@@ -69,6 +69,8 @@ def detect(v_dict, roiRadius, vis=False):
     #     os.makedirs(p2r)
 
     p2rcsv = os.path.join(p2r, "csv")
+    with open(os.path.join(p2r,"centroids.txt"), "w+") as f:
+        f.write(f"[{roi_x}, {roi_y}]")
     os.path.isdir(p2rcsv) or os.makedirs(p2rcsv)
 
     new_frame = cv2.VideoWriter(os.path.join(p2r, sub_name[0] +".avi"),
@@ -126,6 +128,11 @@ def detect(v_dict, roiRadius, vis=False):
             if vis:
                 cv2.imshow("detec", new_gray)
                 cv2.imshow("frame", frame)
+            if storepics:
+                p2rimg = os.path.join(p2r, "images")
+                os.path.isdir(p2rimg) or os.makedirs(p2rimg)
+                cv2.imwrite(os.path.join(p2rimg, "{}_frame{}.jpg".format(sub_name[0], n_frame)), frame,
+                            [int(cv2.IMWRITE_JPEG_QUALITY), 60])
             key = cv2.waitKey(1)
             if key == ord('q'):
                 break

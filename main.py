@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parse.add_argument("--p2s", type=str, help="Path to store the concatenated videos")
     parse.add_argument("--pool", type=int, help="Number of processes to run", default=4)
     parse.add_argument("--vis", type=bool, help="Visualize the video", default=False)
+    parse.add_argument("--img", type=bool, help="Visualize the video", default=False)
     args = parse.parse_args()
 
     p2v = args.p2v
@@ -30,6 +31,6 @@ if __name__ == "__main__":
         p = multiprocessing.Pool(multiprocessing.cpu_count())
     else:
         p = multiprocessing.Pool(len(dicts_list))
-    p.starmap(detect, [(i,j) for i,j in zip(dicts_list,925 * np.ones(len(dicts_list), dtype=int))])
+    p.starmap(detect, [(i,j, k, l) for i,j,k,l in zip(dicts_list,925 * np.ones(len(dicts_list), dtype=int), [args.vis for _ in range(len(dicts_list))], [args.img for _ in range(len(dicts_list))])])
     # detect(dicts_list[1], 925)
 
