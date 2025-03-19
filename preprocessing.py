@@ -18,9 +18,9 @@ def mv_centroids(args):
             centroids_dict[root.split(os.sep)[1]] = [root,tmp_files]
     print(centroids_dict)
     for k, i in centroids_dict.items():
-        if not os.path.isdir(os.path.join(args.p2s, k)):
-            os.makedirs(os.path.join(args.p2s, k))
-        shutil.copy(os.path.join(i[0], i[1][0]), os.path.join(args.p2s, k, "centroids.txt"))
+        if not os.path.isdir(os.path.join(args.p2s, k.lower())):
+            os.makedirs(os.path.join(args.p2s, k.lower()))
+        shutil.copy(os.path.join(i[0], i[1][0]), os.path.join(args.p2s, k.lower(), "centroids.txt"))
 
 def generate_trackers_and_long_df(args):
     match_num = r"(\d+).csv"
@@ -34,8 +34,8 @@ def generate_trackers_and_long_df(args):
             csv_dicts[root.split(os.sep)[1]] = [root,tmp_files]
 
     for k in csv_dicts.keys():
-        if not os.path.isdir(os.path.join(args.p2s, k)):
-            os.makedirs(os.path.join(args.p2s, k))
+        if not os.path.isdir(os.path.join(args.p2s, k.lower())):
+            os.makedirs(os.path.join(args.p2s, k.lower()))
 
         csv_dicts[k][1].sort(key = lambda x: int(re.findall(match_num, x)[0]))
         subj = csv_dicts[k]
@@ -45,9 +45,9 @@ def generate_trackers_and_long_df(args):
         for i, tracker in enumerate(all_trackers):
             all_subjects_dict[i] = {"start_frame": tracker['start_frame'], "end_frame": tracker['end_frame'], "bboxes": np.array(tracker['bboxes']).tolist(), "centroids": np.array(tracker['centroids']).tolist(),
                                     "ovals": np.array(tracker['ovals']).tolist()}
-        with open(os.path.join(args.p2s,k,'trackers.json'), 'w') as f:
+        with open(os.path.join(args.p2s,k.lower(),'trackers.json'), 'w') as f:
             json.dump(all_subjects_dict, f)
-        pd.concat([i for i in all_dfs if not i.empty], ignore_index=True).to_csv(os.path.join(args.p2s, k,'long_dfs.csv'), index=False)
+        pd.concat([i for i in all_dfs if not i.empty], ignore_index=True).to_csv(os.path.join(args.p2s, k.lower(),'long_dfs.csv'), index=False)
         print(k, "done")
     
 
