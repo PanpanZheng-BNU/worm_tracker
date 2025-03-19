@@ -1,22 +1,30 @@
 import json
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import shutil
 import re
 from tracker.iou import *
 import argparse
 
 
-if __name__ == "__main__":
-    parse = argparse.ArgumentParser(description='Process some integers.')
-    parse.add_argument('--date', '-d', type=str, help='date of the experiment')
-    parse.add_argument('--p2s', '-p', type=str, help='path to store the preprocessed data', default="data")
-    args = parse.parse_args()
-    os.path.isdir(args.p2s) or os.makedirs(args.p2s)
-    
-    csv_dicts = dict()
+def mv_centroids(args):
+    centroids_dict = {}
+    for root, dirs, files in os.walk("results"):
+        tmp_files = []
+        for file in files:
+            if file == "centroids.txt" and (args.date in root):
+                tmp_files.append(file)
+        if len(tmp_files):
+            centroids_dict[root.split(os.sep)[1]] = [root,tmp_files]
+    print(centroids_dict)
+    for k, i in centroids_dict.items():
+        if not os.path.isdir(os.path.join(args.p2s, k)):
+            os.makedirs(os.path.join(args.p2s, k))
+        shutil.copy(os.path.join(i[0], i[1][0]), os.path.join(args.p2s, k, "centroids.txt"))
+
+def generate_trackers_and_long_df(args):
     match_num = r"(\d+).csv"
+    csv_dicts = dict()
     for root, dirs, files in os.walk("results"):
         tmp_files = []
         for file in files:
@@ -26,6 +34,9 @@ if __name__ == "__main__":
             csv_dicts[root.split(os.sep)[1]] = [root,tmp_files]
 
     for k in csv_dicts.keys():
+        if not os.path.isdir(os.path.join(args.p2s, k)):
+            os.makedirs(os.path.join(args.p2s, k))
+
         csv_dicts[k][1].sort(key = lambda x: int(re.findall(match_num, x)[0]))
         subj = csv_dicts[k]
         all_dfs = [pd.read_csv(os.path.join(subj[0], i)) for i in subj[1]]
@@ -34,6 +45,16 @@ if __name__ == "__main__":
         for i, tracker in enumerate(all_trackers):
             all_subjects_dict[i] = {"start_frame": tracker['start_frame'], "end_frame": tracker['end_frame'], "bboxes": np.array(tracker['bboxes']).tolist(), "centroids": np.array(tracker['centroids']).tolist(),
                                     "ovals": np.array(tracker['ovals']).tolist()}
-        with open(os.path.join(args.p2s,'./{}_trackers.json'.format(k)), 'w') as f:
+        with open(os.path.join(args.p2s,k,'trackers.json'), 'w') as f:
             json.dump(all_subjects_dict, f)
-        pd.concat(all_dfs, ignore_index=True).to_csv(os.path.join(args.p2s, './{}_dfs.csv'.format(k)), index=False)
+        pd.concat(all_dfs, ignore_index=True).to_csv(os.path.join(args.p2s, k,'long_dfs.csv'), index=False)
+    
+
+
+if __name__ == "__main__":
+    parse = argparse.ArgumentParser(description='Process some integers.')
+    parse.add_argument('--date', '-d', type=str, help='date of the experiment')
+    parse.add_argument('--p2s', '-p', type=str, help='path to store the preprocessed data', default="data")
+    args = parse.parse_args()
+    os.path.isdir(args.p2s) or os.makedirs(args.p2s)
+    
