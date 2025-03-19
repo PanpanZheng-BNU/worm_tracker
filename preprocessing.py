@@ -47,7 +47,8 @@ def generate_trackers_and_long_df(args):
                                     "ovals": np.array(tracker['ovals']).tolist()}
         with open(os.path.join(args.p2s,k,'trackers.json'), 'w') as f:
             json.dump(all_subjects_dict, f)
-        pd.concat(all_dfs, ignore_index=True).to_csv(os.path.join(args.p2s, k,'long_dfs.csv'), index=False)
+        pd.concat([i for i in all_dfs if not i.empty], ignore_index=True).to_csv(os.path.join(args.p2s, k,'long_dfs.csv'), index=False)
+        print(k, "done")
     
 
 
@@ -57,4 +58,6 @@ if __name__ == "__main__":
     parse.add_argument('--p2s', '-p', type=str, help='path to store the preprocessed data', default="data")
     args = parse.parse_args()
     os.path.isdir(args.p2s) or os.makedirs(args.p2s)
+    mv_centroids(args)
+    generate_trackers_and_long_df(args)
     
