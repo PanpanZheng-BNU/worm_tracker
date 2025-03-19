@@ -1,3 +1,5 @@
+.idea/
+__pycache__/
 all_data/
 all_results/
 concat_video/
