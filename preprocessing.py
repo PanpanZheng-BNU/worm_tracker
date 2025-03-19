@@ -20,7 +20,7 @@ if __name__ == "__main__":
     for root, dirs, files in os.walk("results"):
         tmp_files = []
         for file in files:
-            if file.endswith(".csv") && args.date in root:
+            if file.endswith(".csv") and (args.date in root):
                 tmp_files.append(file)
         if len(tmp_files):
             csv_dicts[root.split(os.sep)[1]] = [root,tmp_files]

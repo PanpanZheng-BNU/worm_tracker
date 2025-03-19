@@ -5,6 +5,7 @@ import pandas as pd
 import sys
 import progressbar
 import multiprocessing
+import datetime
 
 sys.path.append('../')
 from conncat_videos  import find_all_videos
@@ -34,7 +35,7 @@ def findROICenter(v):
         b_avg = round(b_avg / detected_circles.shape[1])
     return (a_avg, b_avg)
 
-def detect(v_dict, roiRadius, vis, storepics):
+def detect(v_dict, roiRadius, vis, storepics, date):
     """
     detect(v, roiRadius): detect the object in the video
     :param v: the path 2 video
@@ -51,8 +52,8 @@ def detect(v_dict, roiRadius, vis, storepics):
     tmp_cap = cv2.VideoCapture(vs[0])
     ret, frame = tmp_cap.read()
     fps = round(tmp_cap.get(cv2.CAP_PROP_FPS))
-    p2r = os.path.join("results", sub_name[0])
-    # os.path.isdir(p2r) or os.makedirs(p2r)
+    p2r = os.path.join("results", sub_name[0] + "_" + date)
+    os.path.isdir(p2r) or os.makedirs(p2r)
     # if os.path.isdir(p2r):
     #     print("this folder already exists, are you sure you want to overwrite it?")
     #     print("Press 'y' to continue or 'n' to exit or 'r' to rename the folder")
