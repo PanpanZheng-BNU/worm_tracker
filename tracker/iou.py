@@ -254,15 +254,43 @@ def conn_disappear_next(tmp_df, merge_trackers_summarize):
     indx_frame = (merge_trackers_summarize.start_frame > tmp_end_frame) & ((merge_trackers_summarize.start_frame - tmp_end_frame) <= 100) & (merge_trackers_summarize.left_type == "appear")
 
     tmp_next_df = merge_trackers_summarize.loc[indx_frame]
+    # print(tmp_next_df)
     if len(tmp_next_df) == 0:
         return "can't find"
     else:
-        for i in range(len(tmp_next_df)):
-            if iou(tmp_next_df.iloc[i].start_bbox, tmp_end_bbox) > 0:
-                return tmp_next_df.iloc[i].num
-            if np.linalg.norm(np.array(tmp_next_df.iloc[i].start_centroids) - np.array(tmp_end_centroids)) / np.abs(tmp_next_df.iloc[i].start_frame - tmp_end_frame) < 5:
-                return tmp_next_df.iloc[i].num
+        distance_series = pd.Series({i: np.linalg.norm(np.array(tmp_next_df.loc[i].start_centroids) - np.array(tmp_end_centroids)) for i in tmp_next_df.index}, name="distance")
+        diff_frames_series = pd.Series({i: np.abs(tmp_next_df.loc[i].start_frame - tmp_end_frame) for i in tmp_next_df.index}, name="diff_frames")
+        overlapping_series = pd.Series({i: iou(tmp_next_df.loc[i].start_bbox, tmp_end_bbox) > 0 for i in tmp_next_df.index}, name="is_overlapping")
+        tmp_df = pd.concat([tmp_next_df, overlapping_series, diff_frames_series, distance_series], axis=1)
+        tmp_df = tmp_df.loc[tmp_df.distance / tmp_df.diff_frames < 5]
+        if len(tmp_df) == 0:
+            return "can't find"
+        tmp_df.sort_values(by=["distance", "diff_frames"], inplace=True)
+        return tmp_df.iloc[0].num
+
+def conn_disappear_prev(tmp_df, merge_trackers_summarize):
+    tmp_start_frame = tmp_df.start_frame
+    tmp_start_centroids = tmp_df.start_centroids
+    tmp_start_bbox = tmp_df.start_bbox
+
+    indx_frame = (merge_trackers_summarize.end_frame < tmp_start_frame) & (np.abs(merge_trackers_summarize.end_frame - tmp_start_frame) <= 100) & (merge_trackers_summarize.right_type == "disappear")
+
+    tmp_prev_df = merge_trackers_summarize.loc[indx_frame]
+    tmp_indx = tmp_prev_df.index.to_numpy()
+    # print(tmp_prev_df)
+    if len(tmp_prev_df) == 0:
         return "can't find"
+    else:
+        distance_series = pd.Series({i: np.linalg.norm(np.array(tmp_prev_df.loc[i].end_centroids) - np.array(tmp_start_centroids)) for i in tmp_indx}, name="distance")
+        diff_frames_series = pd.Series({i: np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame) for i in tmp_indx}, name="diff_frames")
+        overlapping_series = pd.Series({i: iou(tmp_prev_df.loc[i].end_bbox, tmp_start_bbox) > 0 for i in tmp_indx}, name="is_overlapping")
+        mean_velocity_series = pd.Series({i: np.linalg.norm(np.array(tmp_prev_df.loc[i].end_centroids) - np.array(tmp_start_centroids)) / np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame) < 5 for i in tmp_indx}, name="mean_velocity")
+        tmp_df = pd.concat([tmp_prev_df, overlapping_series, diff_frames_series,mean_velocity_series, distance_series], axis=1)
+        tmp_df = tmp_df.loc[tmp_df.distance / tmp_df.diff_frames < 5]
+        if len(tmp_df) == 0:
+            return "can't find"
+        tmp_df.sort_values(by=["distance", "diff_frames"], inplace=True)
+        return tmp_df.iloc[0].num
 
 def split_from(num, merge_trackers_summarize):
     tmp_df = merge_trackers_summarize
@@ -380,23 +408,22 @@ def simple_find_nex(start_num, merge_df, banned_list):
 
     return worm, new_banned_list
         
-def conn_disappear_prev(tmp_df, merge_trackers_summarize):
-    tmp_start_frame = tmp_df.start_frame
-    tmp_start_centroids = tmp_df.start_centroids
-    tmp_start_bbox = tmp_df.start_bbox
+    # tmp_start_frame = tmp_df.start_frame
+    # tmp_start_centroids = tmp_df.start_centroids
+    # tmp_start_bbox = tmp_df.start_bbox
 
-    indx_frame = (merge_trackers_summarize.end_frame < tmp_start_frame) & (np.abs(merge_trackers_summarize.end_frame - tmp_start_frame) <= 100) & (merge_trackers_summarize.right_type == "disappear")
+    # indx_frame = (merge_trackers_summarize.end_frame < tmp_start_frame) & (np.abs(merge_trackers_summarize.end_frame - tmp_start_frame) <= 100) & (merge_trackers_summarize.right_type == "disappear")
 
-    tmp_prev_df = merge_trackers_summarize.loc[indx_frame]
-    if len(tmp_prev_df) == 0:
-        return "can't find"
-    else:
-        for i in range(len(tmp_prev_df)):
-            if iou(tmp_prev_df.iloc[i].end_bbox, tmp_start_bbox) > 0:
-                return tmp_prev_df.iloc[i].num
-            if np.linalg.norm(np.array(tmp_prev_df.iloc[i].start_centroids) - np.array(tmp_start_centroids)) / np.abs(tmp_prev_df.iloc[i].start_frame - tmp_start_frame) < 5:
-                return tmp_prev_df.iloc[i].num
-        return "can't find"
+    # tmp_prev_df = merge_trackers_summarize.loc[indx_frame]
+    # if len(tmp_prev_df) == 0:
+    #     return "can't find"
+    # else:
+    #     for i in range(len(tmp_prev_df)):
+    #         if iou(tmp_prev_df.iloc[i].end_bbox, tmp_start_bbox) > 0:
+    #             return tmp_prev_df.iloc[i].num
+    #         if np.linalg.norm(np.array(tmp_prev_df.iloc[i].start_centroids) - np.array(tmp_start_centroids)) / np.abs(tmp_prev_df.iloc[i].start_frame - tmp_start_frame) < 5:
+    #             return tmp_prev_df.iloc[i].num
+    #     return "can't find"
 
 def find_prev(num, merge_summary_df):
     """
