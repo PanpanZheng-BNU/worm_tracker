@@ -29,8 +29,12 @@ if __name__ == "__main__":
         dicts_list.append({k: v})
 
     print(dicts_list)
-    if len(dicts_list) > multiprocessing.cpu_count():
-        p = multiprocessing.Pool(multiprocessing.cpu_count())
+    # if len(dicts_list) > multiprocessing.cpu_count():
+        # p = multiprocessing.Pool(multiprocessing.cpu_count())
+    # else:
+        # p = multiprocessing.Pool(len(dicts_list))
+    if len(dicts_list) > args.pool:
+        p = multiprocessing.Pool(args.pool)
     else:
         p = multiprocessing.Pool(len(dicts_list))
     p.starmap(detect, [(i,j, k, l,m) for i,j,k,l,m in zip(dicts_list,
