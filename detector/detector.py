@@ -8,7 +8,7 @@ import multiprocessing
 import datetime
 
 sys.path.append('../')
-from conncat_videos  import find_all_videos
+# from conncat_videos  import find_all_videos
 
 def findROICenter(v):
     """
