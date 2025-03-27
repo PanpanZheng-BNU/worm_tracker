@@ -1,3 +1,4 @@
+
 # Worm tracker
 This resposity is used to store the code used to trace the position of the worm in videos.
 
@@ -6,3 +7,7 @@ This resposity is used to store the code used to trace the position of the worm 
 
 > key parameter
 > `object_detector = cv2.createBackgroundSubtractorKNN(history=1000,dist2Threshold=80)`
+
+
+## The workflow of worm tracker 
+![](./worm_tracker_workflow.excalidraw.svg)
