@@ -5,26 +5,28 @@ import matplotlib.pyplot as plt
 import shutil
 import re
 import warnings
+import os
 
 # from iou import *
 from plotly.tools import mpl_to_plotly
 import plotly.io as pio
 from matplotlib import pyplot as plt
 from tracker.iou import *
+from tracker.concat_trackers import *
 
-def load_subj(subj):
+def load_subj(p2trackers,subj):
     """
     Load a subject's data from folder. The subject's data is stored in a JSON file, a csv file, and a txt file
     """
     
-    p2json = os.path.join("data",subj.lower(), "trackers.json")
-    p2centroids = os.path.join("data",subj.lower(), "centroids.txt")
+    p2json = os.path.join(p2trackers,subj.lower(), "trackers.json")
+    p2centroids = os.path.join(p2trackers,subj.lower(), "centroids.txt")
     with open(p2json, 'r') as f:
         subj_trackers = json.load(f)
     
     with open(p2centroids, 'r') as f:
         subj_centroids = np.array(eval(f.readline()))
-    subj_long_dfs = pd.read_csv(os.path.join("data", subj.lower(), "long_dfs.csv"), index_col="frame") 
+    subj_long_dfs = pd.read_csv(os.path.join(p2trackers, subj.lower(), "long_dfs.csv"), index_col="frame") 
     subj_long_dfs.index = subj_long_dfs.index.astype(int)
 
     subj_trackers = {int(k): v for k, v in subj_trackers.items()}
@@ -35,13 +37,13 @@ def load_subj(subj):
 
 def generate_merge_summarize(trackers, dfs):
     tmp_summarize = generate_summarize(trackers)
-    tmp_trackers_type_df = pd.DataFrame(columns=["num", "left_type", "right_type", "left_prev", "right_next"])
+    tmp_trackers_type_df = pd.DataFrame(columns=["tracker_id", "left_type", "right_type", "left_prev", "right_next"])
     for i in range(len(tmp_summarize)):
         tmp_df = tmp_summarize.iloc[i]
         tmp_left_type, tmp_right_type, left_prev, right_next = edge_type(tmp_df, dfs, trackers)
-        tmp_trackers_type_df.loc[len(tmp_trackers_type_df)] = [tmp_df.num, tmp_left_type, tmp_right_type, left_prev, right_next]
+        tmp_trackers_type_df.loc[len(tmp_trackers_type_df)] = [tmp_df.tracker_id, tmp_left_type, tmp_right_type, left_prev, right_next]
         
-    tmp_merged_summarize = pd.merge(tmp_summarize, tmp_trackers_type_df, on="num")
+    tmp_merged_summarize = pd.merge(tmp_summarize, tmp_trackers_type_df, on="tracker_id")
     return tmp_merged_summarize
 
 
@@ -49,26 +51,26 @@ def trackers2fine(trackers, dfs):
     tmp_merge_summarize = generate_merge_summarize(trackers, dfs)
     split_from_df = pd.concat([split_from(i, tmp_merge_summarize) for i in range(len(tmp_merge_summarize))], ignore_index=True)
     split_from_df = split_from_df.loc[split_from_df.is_split == True]
-    tmp_all_num = []
+    tmp_all_id = []
     for i in range(len(split_from_df)):
-        nex_num = split_from_df.iloc[i].nex_num
+        nex_id = split_from_df.iloc[i].nex_id
         diff = split_from_df.iloc[i]['difference']
         nex_start = split_from_df.iloc[i]["nex_start"]
-        this_num = split_from_df.iloc[i].this_num
-        tmp_df = pd.DataFrame(columns=['tracker_num', 'split_frame'])
+        this_id = split_from_df.iloc[i].this_id
+        tmp_df = pd.DataFrame(columns=['tracker_id', 'split_frame'])
         for i,j in zip(nex_start, diff):
             if j != 0:
-                tmp_df.loc[len(tmp_df)] = [this_num, i]
-        tmp_all_num.append(tmp_df)
+                tmp_df.loc[len(tmp_df)] = [this_id, i]
+        tmp_all_id.append(tmp_df)
     # print(tmp_all_num[0])
-    if len(tmp_all_num) == 0:
+    if len(tmp_all_id) == 0:
         tmp_new_trackers = trackers
-    elif len(tmp_all_num) >= 1:
-        critical_split_df = pd.concat(tmp_all_num, ignore_index=True)
+    elif len(tmp_all_id) >= 1:
+        critical_split_df = pd.concat(tmp_all_id, ignore_index=True)
         tmp_new_trackers = {}
         ini_indx = 0
         for i in range(len(trackers)):
-            if i not in critical_split_df.tracker_num.values:
+            if i not in critical_split_df.tracker_id.values:
                 tmp_new_trackers[ini_indx] = trackers[i]
                 ini_indx += 1
             else:
@@ -81,29 +83,29 @@ def trackers2fine(trackers, dfs):
         
     merge_to_df = pd.concat([merge_to(i, tmp_new_summarize) for i in range(len(tmp_new_summarize))], ignore_index=True)
     merge_to_df = merge_to_df.loc[merge_to_df.is_merge == True]
-    tmp_all_num = []
+    tmp_all_id = []
     for i in range(len(merge_to_df)):
         diff = merge_to_df.iloc[i]['difference']
         nex_start = merge_to_df.iloc[i]["nex_end"]
-        this_num = merge_to_df.iloc[i].this_num
+        this_id = merge_to_df.iloc[i].this_id
 
-        tmp_df = pd.DataFrame(columns=['tracker_num', 'split_frame'])
+        tmp_df = pd.DataFrame(columns=['tracker_id', 'split_frame'])
 
         for i,j in zip(nex_start, diff):
             if j != 0:
-                tmp_df.loc[len(tmp_df)] = [this_num, i]
-        tmp_all_num.append(tmp_df)
+                tmp_df.loc[len(tmp_df)] = [this_id, i]
+        tmp_all_id.append(tmp_df)
     # print(tmp_all_num)
         
-    if len(tmp_all_num) == 0:
+    if len(tmp_all_id) == 0:
         tmp_new_trackers_2 = tmp_new_trackers
-    elif len(tmp_all_num) >= 1:
-        critical_merge_df = pd.concat(tmp_all_num, ignore_index=True)
+    elif len(tmp_all_id) >= 1:
+        critical_merge_df = pd.concat(tmp_all_id, ignore_index=True)
         critical_merge_df.split_frame += 1
         tmp_new_trackers_2 = {}
         ini_indx = 0
         for i in range(len(tmp_new_trackers)):
-            if i not in critical_merge_df.tracker_num.values:
+            if i not in critical_merge_df.tracker_id.values:
                 tmp_new_trackers_2[ini_indx] = tmp_new_trackers[(i)]
                 ini_indx += 1
             else:
@@ -140,7 +142,7 @@ def diagnosis_worms(worms, summarize, centroid, dfs):
             print("worm %d start frame > 300" % i)
             continue
         if summarize.loc[tmp_worm[-1]].end_frame < np.max(dfs.index):
-            if np.linalg.norm(summarize.loc[tmp_worm[-1]].end_centroids - centroid) < 850:
+            if np.linalg.norm(summarize.loc[tmp_worm[-1]].end_centroid - centroid) < 850:
                 print("worm %d end frame < max frame" % i)
                 continue
         
