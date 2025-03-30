@@ -13,6 +13,7 @@ from detector.detector import detect
 from detector.concat_videos import find_all_videos
 from tracker.simple_tracking import *
 
+
 def str2bool(v):
     if isinstance(v, bool):
         return v

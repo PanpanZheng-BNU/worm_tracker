@@ -4,6 +4,7 @@ module Interpolation
     Makie.convert_arguments(::Type{<:AbstractPlot}, x::DataFrame) = ([Point2f(i) for i in Matrix(select(x, [:x, :y])) |> eachrow],)
     Makie.convert_arguments(::Type{<:AbstractPlot}, df::DataFrame, col::Vector{Symbol}) = 
         (map(Point2f, select(df, col) |> Matrix |> eachrow),)
+
     function interpolation(frame::Int64, prev::Vector{<:Number}, next::Vector{<:Number})
         prev_x, prev_y, prev_f = prev
         next_x, next_y, next_f = next
@@ -67,10 +68,12 @@ module Interpolation
         interpolation_df[!, :frames] = trunc.(Int64, interpolation_df[!, :frames])
         return interpolation_df
     end
+
     function cal_missing(df::DataFrame)
         return @pipe df |> filter(:frames => x -> (x >300 &&  x%20==1), _) |>
             [0; diff(_.frames)] |> filter(x -> x > 20, _) |> sum((_ .- 20) / 20) |> trunc(Int, _)
     end
+
     function vis_trace(df::DataFrame)
         tmp_interpolation_df = interpolation_missing_frame(df)
         tmp_new_merge_df = @pipe df |> filter(:frames => x -> (x > 300) && (x%20 == 1)) |>
