@@ -31,7 +31,7 @@ def generate_trackers_and_long_df(args):
     for root, dirs, files in os.walk(args.p2det):
         tmp_files = []
         for file in files:
-            if file.endswith(".csv") and (args.date in root):
+            if file.endswith(".csv") and (args.date in root) and (any([i in root.lower() for i in ["naive", "train"]])):
                 tmp_files.append(file)
         if len(tmp_files):
             csv_dicts[root.split(os.sep)[-2]] = [root,tmp_files]
