@@ -12,6 +12,9 @@ naive,n2_naive9_3.18
 naive,n2_naive4_3.19
 naive,n2_naive5_3.19
 naive,n2_naive6_3.19
+naive,n2_naive5_3.28
+naive,n2_naive6_3.28
+naive,n2_naive7_3.28
 4h,n2_trained4_3.14
 4h,n2_trained2_3.16
 4h,n2_trained3_3.16
@@ -24,6 +27,9 @@ naive,n2_naive6_3.19
 4h,n2_trained1_3.19
 4h,n2_trained2_3.19
 4h,n2_trained3_3.19
+4h,n2_trained2_3.28
+4h,n2_trained3_3.28
+4h,n2_trained4_3.28
 8h,n2_trained7_3.17
 8h,n2_trained8_3.17
 8h,n2_trained9_3.17
@@ -33,3 +39,6 @@ naive,n2_naive6_3.19
 8h,n2_trained7_3.19
 8h,n2_trained8_3.19
 8h,n2_trained9_3.19
+8h,n2_trained10_3.28
+8h,n2_trained8_3.28
+8h,n2_trained9_3.28
