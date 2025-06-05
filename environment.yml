@@ -1,0 +1,13 @@
+name: worm-tracker
+channels:
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - python=3.9
+  - numpy
+  - opencv
+  - plotly
+  - pandas
+  - progressbar2
+  - matplotlib
+prefix: /Users/zhengpanpan/miniconda3/envs/worm-tracker
