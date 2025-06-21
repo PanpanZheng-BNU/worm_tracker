@@ -1,2 +1,7 @@
 __pychache__/
-**/__pychache__/
+*/__pychache__/
+
+detect_results/
+final_results/
+simple_trackers_result/
+*.jpg
