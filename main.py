@@ -102,7 +102,7 @@ if __name__ == "__main__":
     # print(find_all_videos("/Volumes/MyPassport/new_data/2025.3.19")[1])
     args = create_parse()
     print("=" * 10 + "start detect" + "=" * 10)
-    # detect_main(args)
+    detect_main(args)
     print("=" * 10 + "start simple tracking" + "=" * 10)
     os.path.isdir(args.p2trackers) or os.makedirs(args.p2trackers)
     mv_centroids(args)
