@@ -1,6 +1,5 @@
 # Worm-Tracker
 
->[!Tip]
 > A toolbox for tracking the position of *C. elegans* in behavioral experiments.
 
 
