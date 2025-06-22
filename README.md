@@ -1,5 +1,6 @@
 # Worm-Tracker
 
+>[!Tip]
 > A toolbox for tracking the position of *C. elegans* in behavioral experiments.
 
 
@@ -17,4 +18,4 @@
    ```bash
    conda activate worm-tracker
     ```
-3. 
+3. **
