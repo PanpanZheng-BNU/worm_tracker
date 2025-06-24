@@ -50,12 +50,11 @@ Please extract a frame from the video recording and manually mark the center of 
 The parameter of ROI radius (defined as show below) is determined by the input argument during execution of `main.py`. (The default radius is 900 pixel)
 
 
-<div style="text-align:center; margin: 20 0;">
 <figure>
 <img src="./.imgs/P2.svg" style="width:80%;" alt="Definition of ROI radius" />
+
 <figcaption>Definition of ROI radius</figcaption>
 </figure>
-</div>
 
 
 
