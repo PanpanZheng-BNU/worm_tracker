@@ -30,7 +30,13 @@ Create virtual environments for Python through `conda`:
    conda activate worm-tracker
    ```
 
-### 0.3 ROI Center
+### 0.3 ROI (Region of Interest)
+
+> [!note]
+>
+> We track worms only within the region of interest (ROI) and discard any trajectories that fall outside of it.
+
+#### 0.3.1 ROI Center
 
 Please extract a frame from the video recording and manually mark the center of the plate with a <span style="color:red; font-weight:bold">red circle</span>, as shown below. 
 <img src="./.imgs/ROI_Center.png" style="zoom:25%;" alt="ROI center" />
@@ -39,9 +45,23 @@ Please extract a frame from the video recording and manually mark the center of 
 >
 > Preserve frame resolution during extraction and annotation.
 
+#### 0.3.2 ROI Radius
+
+The parameter of ROI radius (defined as show below) is determined by the input argument during execution of `main.py`. (The default radius is 900 pixel)
+
+![Definition of ROI radius](./.imgs/P2.svg)
 
 
 
+```bash
+python main.py --radius 800
+```
+
+
+
+
+
+### 0.4 Correcting
 
 
 
