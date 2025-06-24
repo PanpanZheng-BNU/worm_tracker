@@ -33,8 +33,7 @@ Create virtual environments for Python through `conda`:
 ### 0.3 ROI Center
 
 Please extract a frame from the video recording and manually mark the center of the plate with a <span style="color:red; font-weight:bold">red circle</span>, as shown below. 
-
-​	<img src="./.imgs/ROI_Center.png" style="zoom:25%;" alt="ROI center" />
+<img src="./.imgs/ROI_Center.png" style="zoom:25%;" alt="ROI center" />
 
 > [!caution]
 >
