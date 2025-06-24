@@ -30,7 +30,7 @@ Create virtual environments for Python through `conda`:
    conda activate worm-tracker
    ```
 
-### 0.3 ROI (Region of Interest)
+### 0.3 Region of Interest (ROI)
 
 > [!note]
 >
@@ -51,7 +51,10 @@ The parameter of ROI radius (defined as show below) is determined by the input a
 
 
 <div style="text-align:center; margin: 20 0;">
+<figure>
 <img src="./.imgs/P2.svg" style="width:80%;" alt="Definition of ROI radius" />
+<figcaption>Definition of ROI radius</figcaption>
+</figure>
 </div>
 
 
@@ -59,8 +62,6 @@ The parameter of ROI radius (defined as show below) is determined by the input a
 ```bash
 python main.py --radius 800
 ```
-
-
 
 
 
