@@ -38,7 +38,7 @@ Please extract a frame from the video recording and manually mark the center of 
 
 > [!caution]
 >
-> When extracting and annotating frames, ensure that the frame <mark>resolution is not changed.</mark>
+> Preserve frame resolution during extraction and annotation.
 
 
 
