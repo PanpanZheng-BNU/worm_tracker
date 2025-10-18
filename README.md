@@ -1,6 +1,6 @@
 # Worm-Tracker
 
-> A toolbox for tracking the position of *C. elegans* in behavioral experiments.
+> A toolbox for tracking the position of multiple *C. elegans* in behavioral experiments.
 
 
 
