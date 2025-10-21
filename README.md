@@ -58,12 +58,17 @@ The parameter of ROI radius (defined as show below) is determined by the input a
 
 
 ```bash
-python main.py --radius 800
+python main.py --p2vs "path of folder consisted of videos" --radius 800
 ```
 
 
 
 ### 0.4 Correcting
 
+```python
+python utils/correcting.py --p2v "path of video"
+```
+```
+```
 
 

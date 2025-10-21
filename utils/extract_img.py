@@ -43,7 +43,7 @@ def extract_image_from_video(video_path, frame_number):
 if __name__ == "__main__":
     # Example usage
     parser = argparse.ArgumentParser(description="Extract a frame from a video file.")
-    parser.add_argument("--video_path", type=str, help="Path to the video file.")
+    parser.add_argument("--p2v", type=str, help="Path to the video file.")
     parser.add_argument("--frame", type=int, help="frame number to extract", default=1)
 
     # parser.add_argument(

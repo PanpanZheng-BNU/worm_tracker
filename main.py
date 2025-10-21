@@ -27,7 +27,7 @@ def str2bool(v):
 def create_parse():
     parse = argparse.ArgumentParser()
     parse.add_argument(
-        "--p2v", type=str, help="Path to the directory containing the videos"
+        "--p2vs", type=str, help="Path to the directory containing the videos"
     )
     parse.add_argument(
         "--p2det",

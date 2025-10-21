@@ -6,7 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Odor position measurement tool")
 parser.add_argument(
-    "--video_path",
+    "--p2v",
     type=str,
     help="Path to the video file",
 )
