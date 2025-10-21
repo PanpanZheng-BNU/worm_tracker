@@ -6,7 +6,7 @@ import pandas as pd
 
 parser = argparse.ArgumentParser(description="Correcting points in an image.")
 parser.add_argument(
-    "--video_path",
+    "--p2v",
     type=str,
     default="/Volumes/MyPassport/new_data/Qing/20250526/N2_Correct_0526.avi",
     help="Path to the video file.",
@@ -17,7 +17,7 @@ args = parser.parse_args()
 # img = np.zeros((512, 512, 3), np.uint8)  # Create a blank image
 
 
-cap = cv2.VideoCapture(args.video_path)
+cap = cv2.VideoCapture(args.p2v)
 ret, img_orig = cap.read()
 
 # img = img_orig.copy()  # Create a copy of the original image

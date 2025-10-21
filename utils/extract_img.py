@@ -53,7 +53,7 @@ if __name__ == "__main__":
     #     default=1,
     # )
     args = parser.parse_args()
-    video_path = args.video_path
+    video_path = args.p2v
     # frame_number = args.frame_number
     frame = args.frame
     extract_image_from_video(video_path, frame)
