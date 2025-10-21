@@ -65,7 +65,7 @@ python main.py --p2vs "path of folder consisted of videos" --radius 800
 
 ### 0.4 Correcting
 
-```python
+```bash
 python utils/correcting.py --p2v "path of video"
 ```
 ```
