@@ -22,13 +22,14 @@ def load_subj(p2trackers, subj):
 
     p2json = os.path.join(p2trackers, subj.lower(), "trackers.json")
     p2centroids = os.path.join(p2trackers, subj.lower(), "centroids.txt")
-    with open(p2json, 'r') as f:
+    with open(p2json, "r") as f:
         subj_trackers = json.load(f)
 
-    with open(p2centroids, 'r') as f:
+    with open(p2centroids, "r") as f:
         subj_centroids = np.array(eval(f.readline()))
-    subj_long_dfs = pd.read_csv(os.path.join(
-        p2trackers, subj.lower(), "long_dfs.csv"), index_col="frame")
+    subj_long_dfs = pd.read_csv(
+        os.path.join(p2trackers, subj.lower(), "long_dfs.csv"), index_col="frame"
+    )
     subj_long_dfs.index = subj_long_dfs.index.astype(int)
 
     subj_trackers = {int(k): v for k, v in subj_trackers.items()}
@@ -39,31 +40,41 @@ def load_subj(p2trackers, subj):
 def generate_merge_summarize(trackers, dfs):
     tmp_summarize = generate_summarize(trackers)
     tmp_trackers_type_df = pd.DataFrame(
-        columns=["tracker_id", "left_type", "right_type", "left_prev", "right_next"])
+        columns=["tracker_id", "left_type", "right_type", "left_prev", "right_next"]
+    )
     for i in range(len(tmp_summarize)):
         tmp_df = tmp_summarize.iloc[i]
         tmp_left_type, tmp_right_type, left_prev, right_next = edge_type(
-            tmp_df, dfs, trackers)
+            tmp_df, dfs, trackers
+        )
         tmp_trackers_type_df.loc[len(tmp_trackers_type_df)] = [
-            tmp_df.tracker_id, tmp_left_type, tmp_right_type, left_prev, right_next]
+            tmp_df.tracker_id,
+            tmp_left_type,
+            tmp_right_type,
+            left_prev,
+            right_next,
+        ]
 
     tmp_merged_summarize = pd.merge(
-        tmp_summarize, tmp_trackers_type_df, on="tracker_id")
+        tmp_summarize, tmp_trackers_type_df, on="tracker_id"
+    )
     return tmp_merged_summarize
 
 
 def trackers2fine(trackers, dfs):
     tmp_merge_summarize = generate_merge_summarize(trackers, dfs)
-    split_from_df = pd.concat([split_from(i, tmp_merge_summarize) for i in range(
-        len(tmp_merge_summarize))], ignore_index=True)
+    split_from_df = pd.concat(
+        [split_from(i, tmp_merge_summarize) for i in range(len(tmp_merge_summarize))],
+        ignore_index=True,
+    )
     split_from_df = split_from_df.loc[split_from_df.is_split == True]
     tmp_all_id = []
     for i in range(len(split_from_df)):
         nex_id = split_from_df.iloc[i].nex_id
-        diff = split_from_df.iloc[i]['difference']
+        diff = split_from_df.iloc[i]["difference"]
         nex_start = split_from_df.iloc[i]["nex_start"]
         this_id = split_from_df.iloc[i].this_id
-        tmp_df = pd.DataFrame(columns=['tracker_id', 'split_frame'])
+        tmp_df = pd.DataFrame(columns=["tracker_id", "split_frame"])
         for i, j in zip(nex_start, diff):
             if j != 0:
                 tmp_df.loc[len(tmp_df)] = [this_id, i]
@@ -87,16 +98,18 @@ def trackers2fine(trackers, dfs):
 
     tmp_new_summarize = generate_merge_summarize(tmp_new_trackers, dfs)
 
-    merge_to_df = pd.concat([merge_to(i, tmp_new_summarize)
-                            for i in range(len(tmp_new_summarize))], ignore_index=True)
+    merge_to_df = pd.concat(
+        [merge_to(i, tmp_new_summarize) for i in range(len(tmp_new_summarize))],
+        ignore_index=True,
+    )
     merge_to_df = merge_to_df.loc[merge_to_df.is_merge == True]
     tmp_all_id = []
     for i in range(len(merge_to_df)):
-        diff = merge_to_df.iloc[i]['difference']
+        diff = merge_to_df.iloc[i]["difference"]
         nex_start = merge_to_df.iloc[i]["nex_end"]
         this_id = merge_to_df.iloc[i].this_id
 
-        tmp_df = pd.DataFrame(columns=['tracker_id', 'split_frame'])
+        tmp_df = pd.DataFrame(columns=["tracker_id", "split_frame"])
 
         for i, j in zip(nex_start, diff):
             if j != 0:
@@ -116,8 +129,7 @@ def trackers2fine(trackers, dfs):
                 tmp_new_trackers_2[ini_indx] = tmp_new_trackers[(i)]
                 ini_indx += 1
             else:
-                split_result = split_trackers(
-                    i, critical_merge_df, tmp_new_trackers)
+                split_result = split_trackers(i, critical_merge_df, tmp_new_trackers)
                 for j in split_result:
                     tmp_new_trackers_2[ini_indx] = j
                     ini_indx += 1
@@ -131,11 +143,11 @@ def trackers2fine(trackers, dfs):
 def find_worms(ini_indx, summarize, banned_list=np.array([])):
     worms = []
     for i in range(len(ini_indx)):
-        tmp_worm, banned_list = simple_find_nex(
-            ini_indx[i], summarize, banned_list)
+        tmp_worm, banned_list = simple_find_nex(ini_indx[i], summarize, banned_list)
         if summarize.loc[ini_indx[i]].start_frame > 300:
             tmp_worm_prev, banned_list = simple_find_prev(
-                ini_indx[i], summarize, banned_list)
+                ini_indx[i], summarize, banned_list
+            )
             tmp_worm = np.concatenate((tmp_worm_prev[:-1], tmp_worm))
         worms.append(tmp_worm)
     return worms
@@ -152,7 +164,10 @@ def diagnosis_worms(worms, summarize, centroid, dfs, start_frame=300):
             print("worm %d start frame > %d" % (i, start_frame))
             continue
         if summarize.loc[tmp_worm[-1]].end_frame < np.max(dfs.index):
-            if np.linalg.norm(summarize.loc[tmp_worm[-1]].end_centroid - centroid) < 850:
+            if (
+                np.linalg.norm(summarize.loc[tmp_worm[-1]].end_centroid - centroid)
+                < 850
+            ):
                 print("worm %d end frame < max frame" % i)
                 continue
 
@@ -172,9 +187,12 @@ def diagnosis_worms2(worms, summarize, centroid, dfs, start_frame=300):
             continue
         tmp_summarize = summarize.loc[tmp_worm]
         tmp_summarize["end_distance"] = np.linalg.norm(
-            np.array(tmp_summarize['end_centroid'].tolist()) - centroid, axis=1)
-        end_tracker_df = tmp_summarize.loc[(tmp_summarize.end_distance > 900) & (
-            tmp_summarize.right_type == "disappear")].sort_values(by='end_frame', ascending=True)
+            np.array(tmp_summarize["end_centroid"].tolist()) - centroid, axis=1
+        )
+        end_tracker_df = tmp_summarize.loc[
+            (tmp_summarize.end_distance > 900)
+            & (tmp_summarize.right_type == "disappear")
+        ].sort_values(by="end_frame", ascending=True)
         if len(end_tracker_df) == 0:
             if summarize.loc[tmp_worm[-1]].end_frame == np.max(dfs.index):
                 new_worms.append(tmp_worm)
@@ -183,8 +201,7 @@ def diagnosis_worms2(worms, summarize, centroid, dfs, start_frame=300):
                 continue
         else:
             end_tracker = end_tracker_df.iloc[0].tracker_id
-            new_worms.append(
-                tmp_worm[:(np.where(tmp_worm == end_tracker)[0][0]+1)])
+            new_worms.append(tmp_worm[: (np.where(tmp_worm == end_tracker)[0][0] + 1)])
 
     return new_worms
 
@@ -201,11 +218,14 @@ def diagnosis_worms_square(worms, summarize, centroid, dfs, radius, start_frame=
             continue
         tmp_summarize = summarize.loc[tmp_worm]
         # tmp_summarize['end_distance'] = np.max(np.abs(np.array(tmp_summarize['end_centroid'].tolist()) - centroid, axis=1))
-        tmp_summarize['end_distance'] = (np.max(
-            np.abs(np.array(tmp_summarize['end_centroid'].tolist()) - centroid), axis=1))
+        tmp_summarize["end_distance"] = np.max(
+            np.abs(np.array(tmp_summarize["end_centroid"].tolist()) - centroid), axis=1
+        )
         # tmp_summarize["end_distance"] = np.linalg.norm(np.array(tmp_summarize['end_centroid'].tolist()) - centroid, axis=1)
-        end_tracker_df = tmp_summarize.loc[(tmp_summarize.end_distance >= radius) & (
-            tmp_summarize.right_type == "disappear")].sort_values(by='end_frame', ascending=True)
+        end_tracker_df = tmp_summarize.loc[
+            (tmp_summarize.end_distance >= radius)
+            & (tmp_summarize.right_type == "disappear")
+        ].sort_values(by="end_frame", ascending=True)
         if len(end_tracker_df) == 0:
             if summarize.loc[tmp_worm[-1]].end_frame == np.max(dfs.index):
                 new_worms.append(tmp_worm)
@@ -214,8 +234,7 @@ def diagnosis_worms_square(worms, summarize, centroid, dfs, radius, start_frame=
                 continue
         else:
             end_tracker = end_tracker_df.iloc[0].tracker_id
-            new_worms.append(
-                tmp_worm[:(np.where(tmp_worm == end_tracker)[0][0]+1)])
+            new_worms.append(tmp_worm[: (np.where(tmp_worm == end_tracker)[0][0] + 1)])
 
     return new_worms
 
@@ -223,14 +242,15 @@ def diagnosis_worms_square(worms, summarize, centroid, dfs, radius, start_frame=
 def worm2df(worm, trackers):
     dfs = []
     for i in worm:
-        tmp_df = pd.DataFrame(trackers[i]['centroids'], columns=["x", "y"])
+        tmp_df = pd.DataFrame(trackers[i]["centroids"], columns=["x", "y"])
         tmp_frames = pd.Series(
-            range(trackers[i]['start_frame'], trackers[i]['end_frame']+1), name="frames")
+            range(trackers[i]["start_frame"], trackers[i]["end_frame"] + 1),
+            name="frames",
+        )
         tmp_df = pd.concat([tmp_frames, tmp_df], axis=1)
-        tmp_trackers_id = pd.Series([i]*len(tmp_df), name="trackers_id")
+        tmp_trackers_id = pd.Series([i] * len(tmp_df), name="trackers_id")
         tmp_df = pd.concat([tmp_trackers_id, tmp_df], axis=1)
-        tmp_ovals = pd.DataFrame(
-            trackers[i]['ovals'], columns=["width", "height"])
+        tmp_ovals = pd.DataFrame(trackers[i]["ovals"], columns=["width", "height"])
         tmp_df = pd.concat([tmp_df, tmp_ovals], axis=1)
         tmp_df.set_index("frames", inplace=True)
         dfs.append(tmp_df)
@@ -240,12 +260,15 @@ def worm2df(worm, trackers):
 def plot_worm(worm, centroid, trackers, radius, shape):
     fig, ax = plt.subplots(figsize=(15, 10))
     for i, j in enumerate(worm):
-        ax.plot(*np.array(trackers[j]['centroids']).T, label=j)
+        ax.plot(*np.array(trackers[j]["centroids"]).T, label=j)
         if i < len(worm) - 1:
-            last_centroid = trackers[j]['centroids'][-1]
-            next_centroid = trackers[worm[i+1]]['centroids'][0]
-            ax.plot([last_centroid[0], next_centroid[0]], [
-                    last_centroid[1], next_centroid[1]], 'k--')
+            last_centroid = trackers[j]["centroids"][-1]
+            next_centroid = trackers[worm[i + 1]]["centroids"][0]
+            ax.plot(
+                [last_centroid[0], next_centroid[0]],
+                [last_centroid[1], next_centroid[1]],
+                "k--",
+            )
 
     ax.set_xlim(0, 3072)
     ax.set_ylim(0, 2048)
@@ -253,21 +276,64 @@ def plot_worm(worm, centroid, trackers, radius, shape):
     ax.legend()
     plotly_fig = mpl_to_plotly(fig)
     if shape == "square":
-        plotly_fig.add_shape(type="rect",
-                             xref="x", yref="y",
-                             x0=centroid[0]-radius, y0=centroid[1]-radius,
-                             x1=centroid[0]+radius, y1=centroid[1]+radius,
-                             line_color="black",)
+        plotly_fig.add_shape(
+            type="rect",
+            xref="x",
+            yref="y",
+            x0=centroid[0] - radius,
+            y0=centroid[1] - radius,
+            x1=centroid[0] + radius,
+            y1=centroid[1] + radius,
+            line_color="black",
+        )
     else:
-        plotly_fig.add_shape(type="circle",
-                            xref="x", yref="y",
-                            x0=centroid[0]-radius, y0=centroid[1]-radius,
-                            x1=centroid[0]+radius, y1=centroid[1]+radius,
-                            line_color="black",)
+        plotly_fig.add_shape(
+            type="circle",
+            xref="x",
+            yref="y",
+            x0=centroid[0] - radius,
+            y0=centroid[1] - radius,
+            x1=centroid[0] + radius,
+            y1=centroid[1] + radius,
+            line_color="black",
+        )
     return plotly_fig
 
 
-def write_results(subj, worms, trackers, centroid, radius, shape="square" ,p2final="./final_results"):
+def interpolate_missing_values(df):
+    """
+    Interpolates missing values in the DataFrame using linear interpolation.
+    """
+    df.reset_index(drop=False, inplace=True)
+    df["diff"] = np.diff(df["frames"].to_numpy(), prepend=np.min(df["frames"]))
+    df["diff"] = df["diff"].astype(int)
+
+    for i, row in df.loc[df["diff"] > 1].iterrows():
+        tmp_frame = row["frames"].astype(int)
+        tmp_diff = row["diff"].astype(int)
+        for j in tmp_frame - np.array(range(1, tmp_diff)):
+            df.loc[len(df), "frames"] = j
+
+        # print(row['diff'].astype(int))
+
+    df.sort_values(by="frames", inplace=True)
+    df.reset_index(inplace=True, drop=True)
+    tmp_df = df.interpolate(method="linear", inplace=False)
+    df[["x", "y"]] = tmp_df[["x", "y"]]
+    df["frames"] = df["frames"].astype(int)
+    df[["x", "y"]] = df[["x", "y"]].astype(float)
+    df["trackers_id"].fillna("interpolated", inplace=True)
+    df["trackers_id"] = df["trackers_id"].astype(str)
+
+    df.drop(columns=["diff"], inplace=True)
+    df[["x", "y"]] = np.round(df[["x", "y"]], 3)
+
+    return df
+
+
+def write_results(
+    subj, worms, trackers, centroid, radius, shape="square", p2final="./final_results"
+):
     os.path.isdir(p2final) or os.mkdir(p2final)
     p2subj = os.path.join(p2final, subj.lower())
     os.path.isdir(p2subj) and shutil.rmtree(p2subj)
@@ -278,9 +344,11 @@ def write_results(subj, worms, trackers, centroid, radius, shape="square" ,p2fin
     os.path.isdir(p2csvs) or os.mkdir(p2csvs)
 
     for i, j in enumerate(worms):
-        tmp_fig = plot_worm(j, centroid, trackers, radius, shape=shape)
+        # tmp_fig = plot_worm(j, centroid, trackers, radius, shape=shape)
         # tmp_fig.write_image(os.path.join(p2imgs, "worms_%d.png" % (i)))
-        pio.write_html(tmp_fig, file=os.path.join(
-            p2imgs, "worms_%d.html" % (i)), auto_open=True)
+        # pio.write_html(tmp_fig, file=os.path.join(
+        #     p2imgs, "worms_%d.html" % (i)), auto_open=True)
+        #
         tmp_df = worm2df(j, trackers)
-        tmp_df.to_csv(os.path.join(p2csvs, "worms_%d.csv" % (i)))
+        interpolated_tmp_df = interpolate_missing_values(tmp_df)
+        interpolated_tmp_df.to_csv(os.path.join(p2csvs, "worms_%d.csv" % (i)))
