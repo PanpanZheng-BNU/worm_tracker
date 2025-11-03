@@ -13,11 +13,18 @@ def find_all_videos(p2v):
     all_dict = {}
     for root, dirs, files in os.walk(p2v):
         videos = []  # list of all the videos
-        if len(files) > 0: # if there are files in the directory
-            videos.extend([file for file in files if (".avi" in file) and file[0] != "."]) # add the video to the list
-        sub_id = [video.split(".")[0] for video in videos if len(video.split("_")) < 4] # get the subject id
-        tmp_dict = {id: sorted([os.path.join(root, v) for v in videos if id in v]) for id in sub_id} # create a dictionary of all the videos to each subject
-        all_dict.update(tmp_dict) # update the dictionary
+        if len(files) > 0:  # if there are files in the directory
+            videos.extend(
+                [file for file in files if (".avi" in file) and file[0] != "."]
+            )  # add the video to the list
+        sub_id = [
+            video.split(".")[0] for video in videos if len(video.split("_")) <= 4
+        ]  # get the subject id
+        tmp_dict = {
+            id: sorted([os.path.join(root, v) for v in videos if id in v])
+            for id in sub_id
+        }  # create a dictionary of all the videos to each subject
+        all_dict.update(tmp_dict)  # update the dictionary
 
     dicts_list = []
     for k, v in all_dict.items():
@@ -37,7 +44,7 @@ def concat_videos(p2vs, p2s):
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
     size = (frame_width, frame_height)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     fps = round(cap.get(cv2.CAP_PROP_FPS))
 
     video = cv2.VideoWriter(p2s, fourcc, fps, size)
@@ -52,9 +59,6 @@ def concat_videos(p2vs, p2s):
     print(f"Video saved to {p2s}")
 
 
-
-
-
 if __name__ == "__main__":
     # p2v = "/Volumes/MyPassport/new_data/2025.1.16"
     p2v = "/Volumes/MyPassport/new_data/2025.1.16"
@@ -66,5 +70,3 @@ if __name__ == "__main__":
     # pool = multiprocessing.Pool()
     # pool.starmap(concat_videos, args)
     # pool.close()
-
-
