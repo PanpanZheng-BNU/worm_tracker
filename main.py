@@ -72,7 +72,7 @@ def create_parse():
 
 def detect_main(args):
     dicts_list = find_all_videos(
-        args.p2v
+        args.p2vs
     )  # obtain all paths to the videos in the specific directory
     # Set the size of parallel pool
     print(len(dicts_list))

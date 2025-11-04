@@ -1,5 +1,6 @@
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 import pandas as pd
 import numpy as np
 
@@ -38,16 +39,22 @@ def df2list(df):
     Returns:
         dets: a list consists of dictionaries
     """
-    dets = [{'bbox':row[['x','y','w','h']].values, 
-             'centroid':row[['cX','cY']].values, 
-             "oval": row[["ellipse_w", "ellipse_h"]]} for _, row in df.iterrows()]
+    dets = [
+        {
+            "bbox": row[["x", "y", "w", "h"]].values,
+            "centroid": row[["cX", "cY"]].values,
+            # "oval": row[["ellipse_w", "ellipse_h"]]
+        }
+        for _, row in df.iterrows()
+    ]
     return dets
+
 
 def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
     """
     simple IOU based tracker.
     Args:
-        detections(list): list of detections per frame, 
+        detections(list): list of detections per frame,
         sigma_iou(float): IOU threshold
         t_min (float): minimum track length in frames.
     Returns:
@@ -62,28 +69,41 @@ def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
         updated_tracks = []
         for track in tracks_active:
             if len(dets) > 0:
-                best_match = max(dets, key=lambda x: iou(track['bboxes'][-1], x['bbox']))
-                if iou(track['bboxes'][-1], best_match['bbox']) >= sigma_iou:
-                    track['bboxes'].append(best_match['bbox'])
-                    track['centroids'].append(best_match['centroid'])
-                    track['ovals'].append(best_match['oval'])
-                    track['end_frame'] = frame_num
+                best_match = max(
+                    dets, key=lambda x: iou(track["bboxes"][-1], x["bbox"])
+                )
+                if iou(track["bboxes"][-1], best_match["bbox"]) >= sigma_iou:
+                    track["bboxes"].append(best_match["bbox"])
+                    track["centroids"].append(best_match["centroid"])
+                    # track['ovals'].append(best_match['oval'])
+                    track["end_frame"] = frame_num
                     updated_tracks.append(track)
-                    del dets[[i for i, _ in enumerate(dets) if all(_['centroid'] == best_match['centroid'])][0]]
+                    del dets[
+                        [
+                            i
+                            for i, _ in enumerate(dets)
+                            if all(_["centroid"] == best_match["centroid"])
+                        ][0]
+                    ]
                     # dets.index(best_match)
             if len(updated_tracks) == 0 or track is not updated_tracks[-1]:
-                if len(track['bboxes']) >= t_min:
+                if len(track["bboxes"]) >= t_min:
                     tracks_finished.append(track)
-        new_tracks = [{'bboxes': [det['bbox']],
-                       'centroids': [det['centroid']], 
-                          'ovals': [det['oval']],
-                       'start_frame': frame_num,
-                       'end_frame': frame_num} for det in dets]
+        new_tracks = [
+            {
+                "bboxes": [det["bbox"]],
+                "centroids": [det["centroid"]],
+                # 'ovals': [det['oval']],
+                "start_frame": frame_num,
+                "end_frame": frame_num,
+            }
+            for det in dets
+        ]
         tracks_active = updated_tracks + new_tracks
-    tracks_finished += [track for track in tracks_active
-                        if len(track['bboxes']) >= t_min]
+    tracks_finished += [
+        track for track in tracks_active if len(track["bboxes"]) >= t_min
+    ]
     return tracks_finished
-
 
 
 # def df_iou(last_bbox,df):
@@ -298,7 +318,7 @@ def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
 #     Returns:
 #         new_tracker: dict of tracker
 #     """
-#     new_tracker1 = {}       
+#     new_tracker1 = {}
 #     new_tracker1['bboxes'] = tracker['bboxes'][:(frame - tracker['start_frame'] + 1)]
 #     new_tracker1['centroids'] = tracker['centroids'][:(frame - tracker['start_frame'] + 1)]
 #     new_tracker1['ovals'] = tracker['ovals'][:(frame - tracker['start_frame'] + 1)]
@@ -311,7 +331,6 @@ def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
 #     new_tracker2['start_frame'] = frame + 1
 #     new_tracker2['end_frame'] = tracker['end_frame']
 #     return new_tracker1, new_tracker2
-
 
 
 # def split_trackers(this_num, all_critical_split_df, all_trackers):
@@ -378,7 +397,7 @@ def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
 #         worm = np.concatenate([worm, [-1]] )
 
 #     return worm, new_banned_list
-        
+
 #     # tmp_start_frame = tmp_df.start_frame
 #     # tmp_start_centroids = tmp_df.start_centroids
 #     # tmp_start_bbox = tmp_df.start_bbox
@@ -443,4 +462,3 @@ def simple_iou_tracker(detections, t_min, sigma_iou=0.3):
 #         worm = np.concatenate([[-1], worm])
 
 #     return worm, new_banned_list
-        

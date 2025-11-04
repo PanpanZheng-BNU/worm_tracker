@@ -1,13 +1,14 @@
 from tracker.iou import *
 
-def df_iou(last_bbox,df):
+
+def df_iou(last_bbox, df):
     """
     df_iou: Calculating the IoU between one bboxes and all bboxes in a frame. And return the bboxes with IOU > 0.
     Args:
         last_bbox: a bbox
         df: a frame dataframe from all_dfs
     """
-    return df[([iou(last_bbox, i) > 0 for i in np.array(df[["x" ,"y" ,"w" ,"h"]])])]
+    return df[([iou(last_bbox, i) > 0 for i in np.array(df[["x", "y", "w", "h"]])])]
 
 
 def find_initial(long_dfs, num, trackers_summarize):
@@ -20,39 +21,67 @@ def find_initial(long_dfs, num, trackers_summarize):
     Returns:
         `df`: a summarize dataframe for all initial trackers.
     """
-    counts_df = long_dfs.groupby("frame").size() # counts the number of dets at each frame
+    counts_df = long_dfs.groupby(
+        "frame"
+    ).size()  # counts the number of dets at each frame
     counts_df.index = counts_df.index.astype(int)
-    counts_df.columns = ['counts'] 
+    counts_df.columns = ["counts"]
 
-    indx_target = counts_df[counts_df >= num].index 
+    indx_target = counts_df[counts_df >= num].index
     threshold = 1
-    indx_split = np.split(indx_target, np.where(np.diff(indx_target) > threshold)[0] + 1)
+    indx_split = np.split(
+        indx_target, np.where(np.diff(indx_target) > threshold)[0] + 1
+    )
     arg_max_split = np.argmax([len(i) for i in indx_split])
     frame_min, frame_max = indx_split[arg_max_split][0], indx_split[arg_max_split][-1]
-    tmp_df = trackers_summarize.loc[(trackers_summarize['start_frame'] <= frame_min) & (trackers_summarize['end_frame'] >= frame_max)]
+    tmp_df = trackers_summarize.loc[
+        (trackers_summarize["start_frame"] <= frame_min)
+        & (trackers_summarize["end_frame"] >= frame_max)
+    ]
 
     return tmp_df
 
+
 def generate_summarize(all_trackers):
     """
-    generate_summarize: Generates a summary dataframe for trackers. 
+    generate_summarize: Generates a summary dataframe for trackers.
     Args:
         `all_trackers`: dict of trackers
     Returns:
         tmp_df: The dataframe columns include: tracker ID, start frame, end frame, duration, start bbox, end bbox, start centroid, and end centroid.
     """
-    tmp_df = pd.DataFrame(columns=["tracker_id", "start_frame", "end_frame", "duration", "start_bbox", "end_bbox", "start_centroid", "end_centroid"])
+    tmp_df = pd.DataFrame(
+        columns=[
+            "tracker_id",
+            "start_frame",
+            "end_frame",
+            "duration",
+            "start_bbox",
+            "end_bbox",
+            "start_centroid",
+            "end_centroid",
+        ]
+    )
     for i in all_trackers:
         tmp_tracker_id = int(i)
         tmp_tracker = all_trackers[i]
-        tmp_start_frame = tmp_tracker['start_frame']
-        tmp_end_frame = tmp_tracker['end_frame']
+        tmp_start_frame = tmp_tracker["start_frame"]
+        tmp_end_frame = tmp_tracker["end_frame"]
         tmp_durations = tmp_end_frame - tmp_start_frame
-        tmp_start_bbox = tmp_tracker['bboxes'][0]
-        tmp_end_bbox = tmp_tracker['bboxes'][-1]
-        tmp_start_centroids = tmp_tracker['centroids'][0]
-        tmp_end_centroids = tmp_tracker['centroids'][-1]
-        tmp_df.loc[len(tmp_df)] = [tmp_tracker_id, tmp_start_frame, tmp_end_frame, tmp_durations, tmp_start_bbox, tmp_end_bbox, tmp_start_centroids, tmp_end_centroids]
+        tmp_start_bbox = tmp_tracker["bboxes"][0]
+        tmp_end_bbox = tmp_tracker["bboxes"][-1]
+        tmp_start_centroids = tmp_tracker["centroids"][0]
+        tmp_end_centroids = tmp_tracker["centroids"][-1]
+        tmp_df.loc[len(tmp_df)] = [
+            tmp_tracker_id,
+            tmp_start_frame,
+            tmp_end_frame,
+            tmp_durations,
+            tmp_start_bbox,
+            tmp_end_bbox,
+            tmp_start_centroids,
+            tmp_end_centroids,
+        ]
     return tmp_df
 
 
@@ -62,12 +91,15 @@ def find_bbox(all_trackers, bbox_df):
     for j in range(len(bbox_df)):
         bbox = bbox_df.iloc[j][["x", "y", "w", "h"]].values
         for i in all_trackers:
-            indx = np.where(np.all(np.array(all_trackers[i]['bboxes']) == bbox, axis=1))[0]
+            indx = np.where(
+                np.all(np.array(all_trackers[i]["bboxes"]) == bbox, axis=1)
+            )[0]
             for k in indx:
-                if (k + all_trackers[i]['start_frame']) in bbox_df.index:
+                if (k + all_trackers[i]["start_frame"]) in bbox_df.index:
                     tmp_indx.append(int(i))
                     tmp_frame.append(bbox_df.index.values[0])
     return tmp_indx, tmp_frame
+
 
 def right_find(tmp_df, long_dfs):
     """
@@ -80,7 +112,8 @@ def right_find(tmp_df, long_dfs):
     tmp_end_bbox = tmp_df.end_bbox
     tmp_end_frame = tmp_df.end_frame
 
-    return df_iou(tmp_end_bbox,long_dfs.loc[[tmp_end_frame + 1]])
+    return df_iou(tmp_end_bbox, long_dfs.loc[[tmp_end_frame + 1]])
+
 
 def left_find(tmp_df, long_dfs):
     """
@@ -93,7 +126,8 @@ def left_find(tmp_df, long_dfs):
     tmp_start_bbox = tmp_df.start_bbox
     tmp_start_frame = tmp_df.start_frame
 
-    return df_iou(tmp_start_bbox,long_dfs.loc[[tmp_start_frame - 1]])
+    return df_iou(tmp_start_bbox, long_dfs.loc[[tmp_start_frame - 1]])
+
 
 def edge_type(tmp_df, long_dfs, all_trackers):
     """
@@ -103,13 +137,13 @@ def edge_type(tmp_df, long_dfs, all_trackers):
     Returns:
     """
 
-    if tmp_df.start_frame-1 not in long_dfs.index:
+    if tmp_df.start_frame - 1 not in long_dfs.index:
         left_prev = ([], [])
     else:
         left_find_df = left_find(tmp_df, long_dfs)
         left_prev = find_bbox(all_trackers, left_find_df)
 
-    if tmp_df.end_frame+1 not in long_dfs.index:
+    if tmp_df.end_frame + 1 not in long_dfs.index:
         right_next = ([], [])
     else:
         right_find_df = right_find(tmp_df, long_dfs)
@@ -129,7 +163,6 @@ def edge_type(tmp_df, long_dfs, all_trackers):
     elif len(left_prev[0]) > 1:
         tmp_left_type = "merge"
 
-
     return tmp_left_type, tmp_right_type, left_prev, right_next
 
 
@@ -139,29 +172,62 @@ def conn_disappear_next(tmp_df, merge_trackers_summarize):
     tmp_end_centroids = tmp_df.end_centroid
     tmp_end_bbox = tmp_df.end_bbox
 
-    indx_frame = (merge_trackers_summarize.start_frame > tmp_end_frame) & ((merge_trackers_summarize.start_frame - tmp_end_frame) <= 100) & (merge_trackers_summarize.left_type == "appear")
+    indx_frame = (
+        (merge_trackers_summarize.start_frame > tmp_end_frame)
+        & ((merge_trackers_summarize.start_frame - tmp_end_frame) <= 100)
+        & (merge_trackers_summarize.left_type == "appear")
+    )
 
     tmp_next_df = merge_trackers_summarize.loc[indx_frame]
     # print(tmp_next_df)
     if len(tmp_next_df) == 0:
         return "can't find"
     else:
-        distance_series = pd.Series({i: np.linalg.norm(np.array(tmp_next_df.loc[i].start_centroid) - np.array(tmp_end_centroids)) for i in tmp_next_df.index}, name="distance")
-        diff_frames_series = pd.Series({i: np.abs(tmp_next_df.loc[i].start_frame - tmp_end_frame) for i in tmp_next_df.index}, name="diff_frames")
-        overlapping_series = pd.Series({i: iou(tmp_next_df.loc[i].start_bbox, tmp_end_bbox) > 0 for i in tmp_next_df.index}, name="is_overlapping")
-        tmp_df = pd.concat([tmp_next_df, overlapping_series, diff_frames_series, distance_series], axis=1)
+        distance_series = pd.Series(
+            {
+                i: np.linalg.norm(
+                    np.array(tmp_next_df.loc[i].start_centroid)
+                    - np.array(tmp_end_centroids)
+                )
+                for i in tmp_next_df.index
+            },
+            name="distance",
+        )
+        diff_frames_series = pd.Series(
+            {
+                i: np.abs(tmp_next_df.loc[i].start_frame - tmp_end_frame)
+                for i in tmp_next_df.index
+            },
+            name="diff_frames",
+        )
+        overlapping_series = pd.Series(
+            {
+                i: iou(tmp_next_df.loc[i].start_bbox, tmp_end_bbox) > 0
+                for i in tmp_next_df.index
+            },
+            name="is_overlapping",
+        )
+        tmp_df = pd.concat(
+            [tmp_next_df, overlapping_series, diff_frames_series, distance_series],
+            axis=1,
+        )
         tmp_df = tmp_df.loc[tmp_df.distance / tmp_df.diff_frames < 5]
         if len(tmp_df) == 0:
             return "can't find"
         tmp_df.sort_values(by=["distance", "diff_frames"], inplace=True)
         return tmp_df.iloc[0].tracker_id
 
+
 def conn_disappear_prev(tmp_df, merge_trackers_summarize):
     tmp_start_frame = tmp_df.start_frame
     tmp_start_centroids = tmp_df.start_centroid
     tmp_start_bbox = tmp_df.start_bbox
 
-    indx_frame = (merge_trackers_summarize.end_frame < tmp_start_frame) & (np.abs(merge_trackers_summarize.end_frame - tmp_start_frame) <= 100) & (merge_trackers_summarize.right_type == "disappear")
+    indx_frame = (
+        (merge_trackers_summarize.end_frame < tmp_start_frame)
+        & (np.abs(merge_trackers_summarize.end_frame - tmp_start_frame) <= 100)
+        & (merge_trackers_summarize.right_type == "disappear")
+    )
 
     tmp_prev_df = merge_trackers_summarize.loc[indx_frame]
     tmp_indx = tmp_prev_df.index.to_numpy()
@@ -169,16 +235,55 @@ def conn_disappear_prev(tmp_df, merge_trackers_summarize):
     if len(tmp_prev_df) == 0:
         return "can't find"
     else:
-        distance_series = pd.Series({i: np.linalg.norm(np.array(tmp_prev_df.loc[i].end_centroid) - np.array(tmp_start_centroids)) for i in tmp_indx}, name="distance")
-        diff_frames_series = pd.Series({i: np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame) for i in tmp_indx}, name="diff_frames")
-        overlapping_series = pd.Series({i: iou(tmp_prev_df.loc[i].end_bbox, tmp_start_bbox) > 0 for i in tmp_indx}, name="is_overlapping")
-        mean_velocity_series = pd.Series({i: np.linalg.norm(np.array(tmp_prev_df.loc[i].end_centroid) - np.array(tmp_start_centroids)) / np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame) < 5 for i in tmp_indx}, name="mean_velocity")
-        tmp_df = pd.concat([tmp_prev_df, overlapping_series, diff_frames_series,mean_velocity_series, distance_series], axis=1)
+        distance_series = pd.Series(
+            {
+                i: np.linalg.norm(
+                    np.array(tmp_prev_df.loc[i].end_centroid)
+                    - np.array(tmp_start_centroids)
+                )
+                for i in tmp_indx
+            },
+            name="distance",
+        )
+        diff_frames_series = pd.Series(
+            {
+                i: np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame)
+                for i in tmp_indx
+            },
+            name="diff_frames",
+        )
+        overlapping_series = pd.Series(
+            {i: iou(tmp_prev_df.loc[i].end_bbox, tmp_start_bbox) > 0 for i in tmp_indx},
+            name="is_overlapping",
+        )
+        mean_velocity_series = pd.Series(
+            {
+                i: np.linalg.norm(
+                    np.array(tmp_prev_df.loc[i].end_centroid)
+                    - np.array(tmp_start_centroids)
+                )
+                / np.abs(tmp_prev_df.loc[i].end_frame - tmp_start_frame)
+                < 5
+                for i in tmp_indx
+            },
+            name="mean_velocity",
+        )
+        tmp_df = pd.concat(
+            [
+                tmp_prev_df,
+                overlapping_series,
+                diff_frames_series,
+                mean_velocity_series,
+                distance_series,
+            ],
+            axis=1,
+        )
         tmp_df = tmp_df.loc[tmp_df.distance / tmp_df.diff_frames < 5]
         if len(tmp_df) == 0:
             return "can't find"
         tmp_df.sort_values(by=["distance", "diff_frames"], inplace=True)
         return tmp_df.iloc[0].tracker_id
+
 
 def split_from(tracker_id, merge_trackers_summarize):
     tmp_df = merge_trackers_summarize
@@ -187,12 +292,22 @@ def split_from(tracker_id, merge_trackers_summarize):
     this_end = tmp_df.loc[tmp_df.tracker_id == tracker_id].end_frame.values
     this_start = tmp_df.loc[tmp_df.tracker_id == tracker_id].start_frame.values
 
-    result_df = pd.DataFrame(columns=["this_id", "nex_id", "this_start", "this_end", "nex_start", "nex_end"])
-    result_df.loc[len(result_df)] = [tracker_id, tmp_df_1.tracker_id.values, this_start, this_end, tmp_df_1.start_frame.values, tmp_df_1.end_frame.values]
-    result_df['difference'] = np.abs(result_df.nex_start - result_df.this_end) - 1
-    result_df['is_split'] = np.any(result_df['difference'].values[0])
+    result_df = pd.DataFrame(
+        columns=["this_id", "nex_id", "this_start", "this_end", "nex_start", "nex_end"]
+    )
+    result_df.loc[len(result_df)] = [
+        tracker_id,
+        tmp_df_1.tracker_id.values,
+        this_start,
+        this_end,
+        tmp_df_1.start_frame.values,
+        tmp_df_1.end_frame.values,
+    ]
+    result_df["difference"] = np.abs(result_df.nex_start - result_df.this_end) - 1
+    result_df["is_split"] = np.any(result_df["difference"].values[0])
 
     return result_df
+
 
 def merge_to(tracker_id, merge_new_summarize):
     tmp_df = merge_new_summarize
@@ -201,11 +316,21 @@ def merge_to(tracker_id, merge_new_summarize):
     this_end = tmp_df.loc[tmp_df.tracker_id == tracker_id].end_frame.values
     this_start = tmp_df.loc[tmp_df.tracker_id == tracker_id].start_frame.values
 
-    result_df = pd.DataFrame(columns=["this_id", "nex_id", "this_start", "this_end", "nex_start", "nex_end"])
-    result_df.loc[len(result_df)] = [tracker_id, tmp_df_1.tracker_id.values, this_start, this_end, tmp_df_1.start_frame.values, tmp_df_1.end_frame.values]
-    result_df['difference'] = np.abs(result_df.nex_end - result_df.this_start) - 1
-    result_df['is_merge'] = np.any(result_df['difference'].values[0])
+    result_df = pd.DataFrame(
+        columns=["this_id", "nex_id", "this_start", "this_end", "nex_start", "nex_end"]
+    )
+    result_df.loc[len(result_df)] = [
+        tracker_id,
+        tmp_df_1.tracker_id.values,
+        this_start,
+        this_end,
+        tmp_df_1.start_frame.values,
+        tmp_df_1.end_frame.values,
+    ]
+    result_df["difference"] = np.abs(result_df.nex_end - result_df.this_start) - 1
+    result_df["is_merge"] = np.any(result_df["difference"].values[0])
     return result_df
+
 
 def split_tracker(tracker, frame):
     """
@@ -215,24 +340,29 @@ def split_tracker(tracker, frame):
     Returns:
         new_tracker: dict of tracker
     """
-    new_tracker1 = {}       
-    new_tracker1['bboxes'] = tracker['bboxes'][:(frame - tracker['start_frame'] + 1)]
-    new_tracker1['centroids'] = tracker['centroids'][:(frame - tracker['start_frame'] + 1)]
-    new_tracker1['ovals'] = tracker['ovals'][:(frame - tracker['start_frame'] + 1)]
-    new_tracker1['start_frame'] = tracker['start_frame']
-    new_tracker1['end_frame'] = frame
+    new_tracker1 = {}
+    new_tracker1["bboxes"] = tracker["bboxes"][: (frame - tracker["start_frame"] + 1)]
+    new_tracker1["centroids"] = tracker["centroids"][
+        : (frame - tracker["start_frame"] + 1)
+    ]
+    # new_tracker1['ovals'] = tracker['ovals'][:(frame - tracker['start_frame'] + 1)]
+    new_tracker1["start_frame"] = tracker["start_frame"]
+    new_tracker1["end_frame"] = frame
     new_tracker2 = {}
-    new_tracker2['bboxes'] = tracker['bboxes'][(frame - tracker['start_frame'] + 1):]
-    new_tracker2['centroids'] = tracker['centroids'][(frame - tracker['start_frame']+1):]
-    new_tracker2['ovals'] = tracker['ovals'][(frame - tracker['start_frame']+1):]
-    new_tracker2['start_frame'] = frame + 1
-    new_tracker2['end_frame'] = tracker['end_frame']
+    new_tracker2["bboxes"] = tracker["bboxes"][(frame - tracker["start_frame"] + 1) :]
+    new_tracker2["centroids"] = tracker["centroids"][
+        (frame - tracker["start_frame"] + 1) :
+    ]
+    # new_tracker2["ovals"] = tracker["ovals"][(frame - tracker["start_frame"] + 1) :]
+    new_tracker2["start_frame"] = frame + 1
+    new_tracker2["end_frame"] = tracker["end_frame"]
     return new_tracker1, new_tracker2
 
 
-
 def split_trackers(this_id, all_critical_split_df, all_trackers):
-    sorted_df = all_critical_split_df.loc[all_critical_split_df.tracker_id == this_id].sort_values('split_frame')
+    sorted_df = all_critical_split_df.loc[
+        all_critical_split_df.tracker_id == this_id
+    ].sort_values("split_frame")
     this_tracker = all_trackers[this_id]
 
     tmp_str = []
@@ -258,15 +388,20 @@ def find_next(tracker_id, merge_summary_df):
         next_id: int
     """
     tmp_df = merge_summary_df.loc[tracker_id]
-    result_df = pd.DataFrame(columns=['this_id', 'nex_id', 'right_type'])
+    result_df = pd.DataFrame(columns=["this_id", "nex_id", "right_type"])
     if tmp_df.right_type == "disappear":
-        result_df.loc[len(result_df)] = [tracker_id, conn_disappear_next(tmp_df, merge_summary_df), "disappear"]
+        result_df.loc[len(result_df)] = [
+            tracker_id,
+            conn_disappear_next(tmp_df, merge_summary_df),
+            "disappear",
+        ]
     else:
         for i in tmp_df.right_next[0]:
             result_df.loc[len(result_df)] = [tracker_id, i, tmp_df.right_type]
     return result_df
 
-def find_all_nex(start_id, merge_summary_df, store_dict = [], banned_list = []):
+
+def find_all_nex(start_id, merge_summary_df, store_dict=[], banned_list=[]):
     find_next_df = find_next(start_id, merge_summary_df)
     store_dict.append(find_next_df)
     # print("${} find next: {}".format(start_num, find_next_df.nex_num.values))
@@ -279,10 +414,18 @@ def find_all_nex(start_id, merge_summary_df, store_dict = [], banned_list = []):
         rand_int = np.random.randint(0, len(find_next_df))
         while find_next_df.nex_id.values[rand_int] in banned_list:
             rand_int = np.random.randint(0, len(find_next_df))
-        find_all_nex(find_next_df.nex_id.values[rand_int], merge_summary_df, store_dict, banned_list)
+        find_all_nex(
+            find_next_df.nex_id.values[rand_int],
+            merge_summary_df,
+            store_dict,
+            banned_list,
+        )
+
 
 def simple_find_nex(start_id, merge_df, banned_list):
-    multi_index = merge_df.loc[(merge_df.right_type == "split") | (merge_df.left_type == "merge")].index.values
+    multi_index = merge_df.loc[
+        (merge_df.right_type == "split") | (merge_df.left_type == "merge")
+    ].index.values
     tmp_list = []
     find_all_nex(start_id, merge_df, tmp_list, banned_list)
     t_id = [i.this_id.values for i in tmp_list if type(i) != str]
@@ -292,10 +435,10 @@ def simple_find_nex(start_id, merge_df, banned_list):
     new_banned_list = worm[np.where([i not in multi_index for i in worm])[0]]
     new_banned_list = np.unique(np.concatenate([banned_list, new_banned_list]))
     if type(tmp_list[-1]) == str:
-        worm = np.concatenate([worm, [-1]] )
+        worm = np.concatenate([worm, [-1]])
 
     return worm, new_banned_list
-        
+
 
 def find_prev(tracker_id, merge_summary_df):
     """
@@ -306,32 +449,44 @@ def find_prev(tracker_id, merge_summary_df):
         next_num: int
     """
     tmp_df = merge_summary_df.loc[tracker_id]
-    result_df = pd.DataFrame(columns=['this_id', 'prev_id', 'left_type'])
+    result_df = pd.DataFrame(columns=["this_id", "prev_id", "left_type"])
     if tmp_df.left_type == "appear":
-        result_df.loc[len(result_df)] = [tracker_id, conn_disappear_prev(tmp_df, merge_summary_df), "appear"]
+        result_df.loc[len(result_df)] = [
+            tracker_id,
+            conn_disappear_prev(tmp_df, merge_summary_df),
+            "appear",
+        ]
     else:
         for i in tmp_df.left_prev[0]:
             result_df.loc[len(result_df)] = [tracker_id, i, tmp_df.left_type]
     return result_df
 
-def find_all_prev(start_id, merge_summary_df, store_dict = [], banned_list = []):
+
+def find_all_prev(start_id, merge_summary_df, store_dict=[], banned_list=[]):
     find_prev_df = find_prev(start_id, merge_summary_df)
     store_dict.insert(0, find_prev_df)
     # print("${} find next: {}".format(start_num, find_next_df.nex_num.values))
     # print("$is in banned list: {}".format([i in banned_list for i in find_next_df.nex_num.values]))
     if np.all([i in banned_list for i in find_prev_df.prev_id.values]):
         print("${} all path banned".format(find_prev_df.prev_id.values))
-        store_dict.insert(0,"all_path_banned")
+        store_dict.insert(0, "all_path_banned")
         return "all_path_banned"
     if type(find_prev_df.prev_id.values[0]) != str:
         rand_int = np.random.randint(0, len(find_prev_df))
         while find_prev_df.prev_id.values[rand_int] in banned_list:
             rand_int = np.random.randint(0, len(find_prev_df))
-        find_all_prev(find_prev_df.prev_id.values[rand_int], merge_summary_df, store_dict, banned_list)
+        find_all_prev(
+            find_prev_df.prev_id.values[rand_int],
+            merge_summary_df,
+            store_dict,
+            banned_list,
+        )
 
 
 def simple_find_prev(start_id, merge_df, banned_list):
-    multi_index = merge_df.loc[(merge_df.right_type == "split") | (merge_df.left_type == "merge")].index.values
+    multi_index = merge_df.loc[
+        (merge_df.right_type == "split") | (merge_df.left_type == "merge")
+    ].index.values
     tmp_list = []
     find_all_prev(start_id, merge_df, tmp_list, banned_list)
     t_id = [i.this_id.values for i in tmp_list if type(i) != str]

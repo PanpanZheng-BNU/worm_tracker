@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def detect_red_circles(image_path):
     # 1. Load the image
     img = cv2.imread(image_path)
@@ -33,7 +34,9 @@ def detect_red_circles(image_path):
 
     # 4. Noise reduction (Gaussian Blur is often effective)
     # This helps to smooth out the edges and make circles more detectable.
-    blurred_mask = cv2.GaussianBlur(red_mask, (9, 9), 2) # Kernel size and sigmaX can be adjusted
+    blurred_mask = cv2.GaussianBlur(
+        red_mask, (9, 9), 2
+    )  # Kernel size and sigmaX can be adjusted
 
     # 5. Apply Hough Circle Transform
     # Parameters for HoughCircles:
@@ -50,12 +53,12 @@ def detect_red_circles(image_path):
     circles = cv2.HoughCircles(
         blurred_mask,
         cv2.HOUGH_GRADIENT,
-        dp=1,                  # Increase to decrease accumulator resolution
-        minDist=50,            # Minimum distance between circle centers
-        param1=50,             # Canny edge detector upper threshold
-        param2=30,             # Accumulator threshold for circle centers
-        minRadius=10,          # Minimum radius of detected circles
-        maxRadius=200          # Maximum radius of detected circles
+        dp=1,  # Increase to decrease accumulator resolution
+        minDist=50,  # Minimum distance between circle centers
+        param1=50,  # Canny edge detector upper threshold
+        param2=30,  # Accumulator threshold for circle centers
+        minRadius=5,  # Minimum radius of detected circles
+        maxRadius=200,  # Maximum radius of detected circles
     )
 
     # Ensure some circles were found
@@ -66,9 +69,9 @@ def detect_red_circles(image_path):
             radius = i[2]
 
             # Draw the outer circle
-            cv2.circle(output, center, radius, (0, 255, 0), 2) # Green circle outline
+            cv2.circle(output, center, radius, (0, 255, 0), 2)  # Green circle outline
             # Draw the center of the circle
-            cv2.circle(output, center, 2, (0, 0, 255), 3) # Red dot for center
+            cv2.circle(output, center, 2, (0, 0, 255), 3)  # Red dot for center
 
     # Display the results
     # cv2.imshow("Original Image", img)
@@ -78,6 +81,7 @@ def detect_red_circles(image_path):
     # cv2.destroyAllWindows()
     cv2.imwrite(f"{image_path.split('.')[0]}_detect_circle.jpg", output)
     return center
+
 
 if __name__ == "__main__":
     # Example usage

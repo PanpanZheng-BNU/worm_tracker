@@ -108,8 +108,8 @@ def detect(v_dict, p2s, roiRadius, vis, imgs, video, date):
                     "h",
                     "cX",
                     "cY",
-                    "ellipse_w",
-                    "ellipse_h",
+                    # "ellipse_w",
+                    # "ellipse_h",
                 ]
             )
             ret, frame = curr_v.read()
@@ -145,12 +145,12 @@ def detect(v_dict, p2s, roiRadius, vis, imgs, video, date):
                     )
                     x, y, w, h = cv2.boundingRect(approx)
 
-                    try:
-                        ellipse = cv2.fitEllipse(contour)
-                        ellipse_w, ellipse_h = ellipse[1]
-                        cv2.ellipse(frame, ellipse, (0, 255, 0), 2)
-                    except:
-                        ellipse_w, ellipse_h = np.nan, ep.nan
+                    # try:
+                    # ellipse = cv2.fitEllipse(contour)
+                    # ellipse_w, ellipse_h = ellipse[1]
+                    # cv2.ellipse(frame, ellipse, (0, 255, 0), 2)
+                    # except:
+                    # ellipse_w, ellipse_h = np.nan, ep.nan
 
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
                     M = cv2.moments(contour)
@@ -165,8 +165,8 @@ def detect(v_dict, p2s, roiRadius, vis, imgs, video, date):
                         h,
                         cX,
                         cY,
-                        ellipse_w,
-                        ellipse_h,
+                        # ellipse_w,
+                        # ellipse_h,
                     ]
 
             # cv2.circle(frame, (roi_x, roi_y), roiRadius, (255, 0, 0), 3)

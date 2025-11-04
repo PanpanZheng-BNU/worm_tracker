@@ -26,7 +26,7 @@ def extract_image_from_video(video_path, frame_number):
 
     cv2.imwrite(
         os.path.join(
-            # os.path.dirname(video_path),
+            os.path.dirname(video_path),
             f"{video_path.split('/')[-1].split('.')[0]}.jpg",
         ),
         frame,
