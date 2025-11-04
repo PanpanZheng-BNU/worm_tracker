@@ -67,7 +67,8 @@ def detect(v_dict, p2s, roiRadius, vis, imgs, video, date):
     subj_name = list(v_dict.keys())
     roi_x, roi_y = findROICenter(os.path.join(p2vs, subj_name[0] + ".jpg"))
     object_detector = cv2.createBackgroundSubtractorKNN(
-        history=1500, dist2Threshold=140
+        history=3500, dist2Threshold=80
+        # history=1500, dist2Threshold=140
     )  # 1000 170
     tmp_cap = cv2.VideoCapture(vs[0])
     ret, frame = tmp_cap.read()
@@ -139,7 +140,8 @@ def detect(v_dict, p2s, roiRadius, vis, imgs, video, date):
             n_frame += 1
 
             for contour in contours:
-                if 20 < cv2.contourArea(contour) < 250:
+                # if 20 < cv2.contourArea(contour) < 250:
+                if 5 < cv2.contourArea(contour) < 250:
                     approx = cv2.approxPolyDP(
                         contour, 0.01 * cv2.arcLength(contour, True), True
                     )
