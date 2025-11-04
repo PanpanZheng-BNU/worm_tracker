@@ -1,6 +1,5 @@
-__pychache__/
-*/__pychache__/
-
+__pycache__/
+*/__pycache__/
 detect_results/
 final_results/
 simple_trackers_result/
