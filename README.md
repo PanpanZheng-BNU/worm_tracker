@@ -1,5 +1,8 @@
+[中文文档](README-zh.md)
+
+---
+
 # Worm-Tracker
-![中文文档](README-zh.md)
 > A toolbox for tracking the position of multiple *C. elegans* worms in behavioral experiments.
 
 ## Table of Contents
