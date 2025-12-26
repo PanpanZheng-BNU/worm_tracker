@@ -170,12 +170,28 @@ python main.py --p2vs "/实验数据/2024.11.04/" --radius 900 --date "11.04"
 
 处理完成后，您将在以下位置找到结果：
 
+**步骤 1 (`main.py`) 的中间结果**：
 ```
 simple_trackers_result/
 ├── n2_control_1/
-│   ├── trackers.json      # 所有线虫的轨迹数据
+│   ├── trackers.json      # 初步的轨迹片段
 │   ├── long_dfs.csv        # 每帧的检测结果
 │   └── centroids.txt       # ROI中心坐标
+├── n2_control_2/
+│   └── ...
+└── n2_test_1/
+    └── ...
+```
+
+**步骤 2 (`find_worm.ipynb`) 的最终结果**：
+```
+final_results/
+├── n2_control_1/
+│   ├── csvs/
+│   │   ├── worms_0.csv    # 第0号线虫的完整轨迹
+│   │   ├── worms_1.csv    # 第1号线虫的完整轨迹
+│   │   └── ...
+│   └── imgs/              # 可视化图像（如果生成）
 ├── n2_control_2/
 │   └── ...
 └── n2_test_1/
@@ -252,11 +268,19 @@ python main.py --p2vs "/data/videos/" --pool 8
 │       ├── centroids.txt        # ROI中心坐标
 │       └── sample_img_*.jpg     # 随机采样的帧图像
 │
-└── simple_trackers_result/      # 最终追踪结果
+├── simple_trackers_result/      # 初步追踪结果（main.py输出）
+│   └── n2_control_1/
+│       ├── trackers.json        # 初步轨迹片段
+│       ├── long_dfs.csv         # 完整检测数据
+│       └── centroids.txt        # ROI中心坐标
+│
+└── final_results/               # 最终追踪结果（find_worm.ipynb输出）
     └── n2_control_1/
-        ├── trackers.json        # 轨迹数据
-        ├── long_dfs.csv         # 完整检测数据
-        └── centroids.txt        # ROI中心坐标
+        ├── csvs/
+        │   ├── worms_0.csv      # 第0号线虫的完整轨迹
+        │   ├── worms_1.csv      # 第1号线虫的完整轨迹
+        │   └── ...
+        └── imgs/                # 可视化图像（如果生成）
 ```
 
 ### 3.2 输出文件说明
@@ -311,31 +335,31 @@ ROI中心坐标，格式：`[x, y]`
 
 #### find_worm.ipynb 输出文件
 
-运行 `find_worm.ipynb` 后，会在分析的培养皿文件夹中生成以下最终结果文件：
+运行 `find_worm.ipynb` 后，会在 `final_results/{subj}/` 文件夹中生成以下最终结果文件：
 
-##### worms.json
+##### csvs/worms_{i}.csv
 
-包含所有有效线虫的完整轨迹数据，每只线虫一个条目。
+每只有效线虫的完整轨迹数据，每只线虫一个CSV文件。
 
-**结构说明**:
-- 每只线虫的轨迹由多个 tracker 片段链接而成
-- 包含完整的起止帧信息和位置数据
-- 只保留通过验证的有效线虫（满足时长、位置等条件）
-
-##### valid_worms_info.csv
-
-记录每只有效线虫的统计信息：
-
+**列说明**：
 | 列名 | 说明 |
 |------|------|
-| `worm_id` | 线虫编号 |
-| `start_frame` | 起始帧号 |
-| `end_frame` | 结束帧号 |
-| `total_frames` | 总帧数 |
-| `trackers_used` | 使用的 tracker 片段数量 |
+| `frames` | 帧号 |
+| `trackers_id` | 使用的tracker ID（或"interpolated"表示插值帧） |
+| `x`, `y` | 线虫质心坐标 |
+
+**特点**：
+- 每只线虫的轨迹由多个 tracker 片段链接而成
+- 包含完整的起止帧信息和位置数据
+- 缺失帧通过线性插值补全
+- 只保留通过验证的有效线虫（满足时长、位置等条件）
+
+##### imgs/（可选）
+
+如果在 `write_results()` 中启用，会生成每只线虫的轨迹可视化图像。
 
 > [!TIP]
-> 这些是最终的分析结果，可以直接用于下游的行为分析和统计。
+> 这些是最终的分析结果，可以直接用于下游的行为分析和统计。最终结果保存在 `final_results/` 目录中。
 
 ## 4. 高级用法
 
@@ -591,9 +615,9 @@ python utils/detect_circle.py
 ### Q4: 输出文件在哪里？
 
 **位置**:
-- 中间结果: `./detect_results/`
-- 最终结果: `./simple_trackers_result/`
-- 可通过 `--p2det` 和 `--p2trackers` 参数自定义
+- 检测中间结果: `./detect_results/`
+- 初步追踪结果: `./simple_trackers_result/` (可通过 `--p2trackers` 参数自定义)
+- 最终线虫轨迹: `./final_results/` (运行 `find_worm.ipynb` 后生成)
 
 ### Q5: find_worm.ipynb 中找到的有效线虫数量太少怎么办？
 
